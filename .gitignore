@@ -1,0 +1,23 @@
+# Excel injested docs
+
+data/extract/excel/barclays_excel/barclays_statements.xlsx
+data/extract/excel/monzo_excel/monzo_statements.xlsx
+data/extract/excel/wise_excel/wise_statements.xlsx
+
+# Bank statements pdf directories
+
+/data/extract/banks/bank_statements/barclays/
+/data/extract/banks/bank_statements/monzo/
+/data/extract/banks/bank_statements/wise/
+
+# env
+.env
+
+# planning
+planning.md
+
+# venv
+venv/
+.venv/
+__pycache__/
+*.py[cod]
