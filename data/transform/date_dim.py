@@ -6,7 +6,7 @@ from collections import defaultdict
 
 class Date:
     
-    def all_dates(self,file_path,sheet_name):
+    def date_dim(self,file_path,sheet_name):
         
     
         date_dict = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()
@@ -42,11 +42,11 @@ class Date:
         
         from_num = 1
         to_num = 2
-        blc1_xlsx_df = pd.DataFrame(self.all_dates(blc_file_path,"2025-12 to 2026-01")) # bcl 2025 sheet
+        blc1_xlsx_df = pd.DataFrame(self.date_dim(blc_file_path,"2025-12 to 2026-01")) # bcl 2025 sheet
 
         while to_num <= 9:
             
-            monzo_sheet_month = self.all_dates(blc_file_path,f"2026-0{from_num} to 2026-0{to_num}")
+            monzo_sheet_month = self.date_dim(blc_file_path,f"2026-0{from_num} to 2026-0{to_num}")
             blc2_xlsx_container.append(monzo_sheet_month)
             
             from_num += 1
@@ -56,7 +56,7 @@ class Date:
         
         for blc_sheet_month in blc2_xlsx_container:
             for key, value in blc_sheet_month.items():
-                    blc_grouped[key].extend(value)
+                blc_grouped[key].extend(value)
 
         blc2_xlsx_df = pd.DataFrame(dict(blc_grouped))
        
@@ -68,20 +68,20 @@ class Date:
         monzo_xlsx_container = []
         months_dict = {0:"Jan",1:"Feb",2:"Mar",3:"Apr",4:"May",5:"Jun",6:"Jul",7:"Aug",8:"Sep"}
         
-        monzo1_xlsx_df = pd.DataFrame(self.all_dates(monzo_file_path, "Dec 2025 (28-31)")) #2025 sheet
+        monzo1_xlsx_df = pd.DataFrame(self.date_dim(monzo_file_path, "Dec 2025 (28-31)")) #2025 sheet
         
         
         for month_index in range(0,8):
             if month_index == 1:
-                monzo_xlsx_container.append(self.all_dates(monzo_file_path,"Feb 2026 (01-28)"))
+                monzo_xlsx_container.append(self.date_dim(monzo_file_path,"Feb 2026 (01-28)"))
             elif month_index == 3:
-                monzo_xlsx_container.append(self.all_dates(monzo_file_path,"Apr 2026 (01-30)"))
+                monzo_xlsx_container.append(self.date_dim(monzo_file_path,"Apr 2026 (01-30)"))
             elif month_index == 5:
-                monzo_xlsx_container.append(self.all_dates(monzo_file_path,"Jun 2026 (01-30)"))
+                monzo_xlsx_container.append(self.date_dim(monzo_file_path,"Jun 2026 (01-30)"))
             elif month_index == 8:
-                monzo_xlsx_container.append(self.all_dates(monzo_file_path,"Sep 2026 (01-30)"))
+                monzo_xlsx_container.append(self.date_dim(monzo_file_path,"Sep 2026 (01-30)"))
             else:
-                monzo_xlsx_container.append(self.all_dates(monzo_file_path,f"{months_dict[month_index]} 2026 (01-31)"))
+                monzo_xlsx_container.append(self.date_dim(monzo_file_path,f"{months_dict[month_index]} 2026 (01-31)"))
                 
             month_index += 1
             
@@ -96,10 +96,10 @@ class Date:
           
         #--------------------wise-----------------------------#   
        
-        wise_may_2026 = self.all_dates(wise_file_path, "2026-05 May")
-        wise_jul_2026 = self.all_dates(wise_file_path, "2026-07 Jul")
-        wise_aug_2026 = self.all_dates(wise_file_path, "2026-08 Aug")
-        wise_sep_2026 = self.all_dates(wise_file_path, "2026-09 Sep")
+        wise_may_2026 = self.date_dim(wise_file_path, "2026-05 May")
+        wise_jul_2026 = self.date_dim(wise_file_path, "2026-07 Jul")
+        wise_aug_2026 = self.date_dim(wise_file_path, "2026-08 Aug")
+        wise_sep_2026 = self.date_dim(wise_file_path, "2026-09 Sep")
         
         wise_xlsx_container = [wise_may_2026,wise_jul_2026,wise_aug_2026,wise_sep_2026]
         wise_grouped = defaultdict(list)
@@ -121,21 +121,21 @@ class Date:
         blc_doc = pd.ExcelFile(blc_file_path)
         bcl_sheet_name = blc_doc.sheet_names[-2]
 
-        bcl_xlsx_df = pd.DataFrame(self.all_dates(blc_file_path,bcl_sheet_name))
+        bcl_xlsx_df = pd.DataFrame(self.date_dim(blc_file_path,bcl_sheet_name))
         
         #--------------------monzo-----------------------------#
         
         monzo_doc = pd.ExcelFile(monzo_file_path)
         monzo_sheet_name = monzo_doc.sheet_names[-1]
         
-        monzo_xlsx_df = pd.DataFrame(self.all_dates(monzo_file_path,monzo_sheet_name))
+        monzo_xlsx_df = pd.DataFrame(self.date_dim(monzo_file_path,monzo_sheet_name))
         
         #-----------------------wise-----------------------------#
         
         wise_doc = pd.ExcelFile(wise_file_path)
         wise_sheet_name = wise_doc.sheet_names[-1]
         
-        wise_xlsx_df = pd.DataFrame(self.all_dates(wise_file_path,wise_sheet_name))
+        wise_xlsx_df = pd.DataFrame(self.date_dim(wise_file_path,wise_sheet_name))
         
         all_frames = [bcl_xlsx_df,monzo_xlsx_df,wise_xlsx_df]
         
