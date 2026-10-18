@@ -21,3 +21,6 @@ venv/
 .venv/
 __pycache__/
 *.py[cod]
+
+# Descriptions from documents
+non_confidential_keywords.py

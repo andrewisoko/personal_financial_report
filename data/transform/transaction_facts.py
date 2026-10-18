@@ -2,6 +2,7 @@ import pandas as pd
 import uuid
 from pathlib import Path
 import math
+from non_confidential_keywords import keyword_to_category
 
 
 
@@ -22,9 +23,30 @@ class Transaction:
         for bank_name in banks:
             if bank_name == "barclays":
                 
-                date_foreign_key = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()['Date']
+                
+                dates = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()['Date']
                 money_out_bcl = pd.read_excel(file_path,sheet_name,usecols=["Money Out"]).to_dict()['Money Out']
                 money_in_bcl = pd.read_excel(file_path,sheet_name,usecols=["Money In"]).to_dict()["Money In"]
+                description = pd.read_excel(file_path,sheet_name,usecols=["Description"]).to_dict()['Description']
+                
+                for description_text in description.values():
+                    lowered_description = str(description_text).lower()
+
+                    matched_category= None
+
+                    for keyword, category in keyword_to_category["barclays"].items():
+                        if keyword.lower() in lowered_description:
+                            matched_category = category
+                            category_id.append(matched_category)
+                        else:
+                            matched_category = "bcl_cat_extras18"
+                            category_id.append(matched_category)
+                
+                
+                for key,val in dates.items():
+                    date_fk = str(val)[0:3] + str(val)[5:7] + str(val)[8:10] 
+                    date_id.append(date_fk)
+                    
                 
                 for key,val in money_out_bcl.items():
                     
@@ -43,7 +65,28 @@ class Transaction:
                         money_out.append(True)
                 
             elif bank_name == "monzo":
+                
                 gbp_amount = pd.read_excel(file_path,sheet_name,usecols=["(GBP) Amount"])["(GBP) Amount"]
+                dates = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()['Date']
+                description = pd.read_excel(file_path,sheet_name,usecols=["Description"]).to_dict()['Description']
+                
+                for description_text in description.values():
+                    lowered_description = str(description_text).lower()
+
+                    matched_category = None
+
+                    for keyword, category in keyword_to_category["monzo"].items():
+                        if keyword.lower() in lowered_description:
+                            matched_category = category
+                            category_id.append(matched_category)
+                        else:
+                            matched_category = "monzo_cat_extras28"
+                            category_id.append(matched_category)
+                
+                
+                for key,val in dates.items():
+                    date_fk = str(val)[0:3] + str(val)[5:7] + str(val)[8:10] 
+                    date_id.append(date_fk)
                 
                 for key,val in gbp_amount.items():
                     if val < 0:
@@ -66,6 +109,31 @@ class Transaction:
                 currency_wise = pd.read_excel(file_path,sheet_name,usecols=["Currency"]).to_dict()['Currency']
                 incoming = pd.read_excel(file_path,sheet_name,usecols=["Incoming"]).to_dict()['Incoming']
                 outgoing = pd.read_excel(file_path,sheet_name,usecols=["Outgoing"]).to_dict()['Outgoing']
+                dates = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()['Date']
+                description = pd.read_excel(file_path,sheet_name,usecols=["Description"]).to_dict()['Description']
+                
+                for description_text in description.values():
+                    lowered_description = str(description_text).lower()
+
+                    matched_category = None
+                    count = 0
+                    
+                    for keyword, category in keyword_to_category["wise"].items():
+                        if currency_wise[count] != "GBP":
+                            matched_category = "wise_cat_holidays30"
+                            category_id.append(matched_category)
+                            
+                        elif keyword.lower() in lowered_description and currency_wise[count] == "GBP":
+                            matched_category = category
+                            category_id.append(matched_category)
+                        else:
+                            matched_category = "wise_cat_extras33"
+                            category_id.append(matched_category) 
+                        count += 1
+                           
+                for key,val in dates.items():
+                    date_fk = str(val)[0:3] + str(val)[5:7] + str(val)[8:10] 
+                    date_id.append(date_fk)
                 
                
                 for key,val in outgoing.items():
