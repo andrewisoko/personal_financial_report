@@ -10,9 +10,13 @@ class Transaction:
     
     def transaction_facts(self,file_path,sheet_name):
         
-       
+        EXCEL_DIR = Path(__file__).parent.parent / "extract"/ "excel"
+        BCL_FILE_PATH = EXCEL_DIR / "barclays_excel" / "barclays_statements.xlsx"
+        STARTING_BALANCE_2026 = pd.read_excel(BCL_FILE_PATH,"2025-12 to 2026-01",usecols=["Balance"]).to_dict()['Balance'][0]
+        
         bank_ref = "barclays" if "barclays" in str(file_path) else "monzo" if "monzo" in str(file_path) else "wise"
         unidentified_transactions = []
+        
         banks = []   
         transaction_id = []
         amount = []
@@ -21,15 +25,20 @@ class Transaction:
         money_in = []
         date_id = []
         category_id = []
-        
-       
+    
+    #-----------------------------------------------------------------------------------------#  
+    #---------------------------------BARCLAYS------------------------------------------------# 
+    #-----------------------------------------------------------------------------------------#
+    
         if bank_ref == "barclays":
             
-            
+            count = 0 
             dates = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()['Date']
             money_out_bcl = pd.read_excel(file_path,sheet_name,usecols=["Money Out"]).to_dict()['Money Out']
             money_in_bcl = pd.read_excel(file_path,sheet_name,usecols=["Money In"]).to_dict()["Money In"]
             description = pd.read_excel(file_path,sheet_name,usecols=["Description"]).to_dict()['Description']
+            
+            ### category id ###
             
             for description_text in description.values():
                 lowered_description = str(description_text).lower()
@@ -40,15 +49,27 @@ class Transaction:
                     if keyword.lower() in lowered_description:
                         matched_category = category
                         category_id.append(matched_category)
-                    else:
-                        matched_category = "bcl_cat_extras18"
-                        category_id.append(matched_category)
+                        break
+                if money_in_bcl[count] > 0 and matched_category == None:
+                    keyword = "income source"
+                    category_id.append("bcl_cat_income01")
+                    
+                elif keyword.lower() not in lowered_description:
+                    keyword = "unidentified transfer of" + str(money_out_bcl[count]) if math.isnan(money_in_bcl[count]) else "unidentified transfer of" + str(money_in_bcl[count])
+                    unidentified_transactions.append({keyword:category})
+                    category_id.append("bcl_cat_extras18")
+                
+                count += 1
             
-            
+             ### dates id ###
+             
+                
             for key,val in dates.items():
                 date_fk = str(val)[0:3] + str(val)[5:7] + str(val)[8:10] 
                 date_id.append(date_fk)
                 
+            ### rest of data ###
+            
             
             for key,val in money_out_bcl.items():
                 
@@ -61,13 +82,17 @@ class Transaction:
                     money_out.append(False)
                     
                 elif math.isnan(val) == False and math.isnan(money_in_bcl[key]):
-                    banks.append("wise")
+                    banks.append("barclays")
                     transaction_id.append("bcl_" + str(uuid.uuid4()))
                     amount.append(val)
                     currency.append("GBP")
                     money_in.append(False)
                     money_out.append(True)
-            
+                    
+    #----------------------------------------------------------------------------------------#               
+    #-----------------------------------MONZO------------------------------------------------#  
+    #----------------------------------------------------------------------------------------#   
+         
         elif bank_ref == "monzo":
             
             count = 0
@@ -75,6 +100,8 @@ class Transaction:
             dates = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()['Date']
             description = pd.read_excel(file_path,sheet_name,usecols=["Description"]).to_dict()['Description']
             
+            ### category id ###
+                        
             for description_text in description.values():
                 lowered_description = str(description_text).lower()
 
@@ -82,14 +109,12 @@ class Transaction:
 
                 for keyword, category in KEYWORD_TO_CATEGORY["monzo"].items():
                     if keyword.lower() in lowered_description:
-                        # print(f"keyword name {keyword} {gbp_amount[count]}")
                         matched_category = category
                         category_id.append(matched_category)
                         break
                          
-                if gbp_amount[count] > 0 and category not in category_id:
+                if gbp_amount[count] > 0 and matched_category == None:
                     keyword = "income source"
-                    # print(f"keyword name {keyword} {gbp_amount[count]}")
                     category_id.append("monzo_cat_transferin29")
                     
                 elif keyword.lower() not in lowered_description:
@@ -99,10 +124,15 @@ class Transaction:
                     category_id.append("monzo_cat_extras28")
                      
                 count += 1
+                
+                
+            ### dates id ### 
             
             for key,val in dates.items():
                 date_fk = str(val)[0:3] + str(val)[5:7] + str(val)[8:10] 
                 date_id.append(date_fk)
+                
+            ### rest of data ###
             
             for key,val in gbp_amount.items():
                 if val < 0:
@@ -120,9 +150,13 @@ class Transaction:
                     currency.append("GBP")
                     money_in.append(True)
                     money_out.append(False)
-                    
+    
+    #-------------------------------------------------------------------------------------#
+    #---------------------------------WISE------------------------------------------------#
+    #-------------------------------------------------------------------------------------#                
         elif bank_ref == "wise":
             
+            count = 0
             description = pd.read_excel(file_path,sheet_name,usecols=["Description"]).to_dict()['Description']
             currency_wise = pd.read_excel(file_path,sheet_name,usecols=["Currency"]).to_dict()['Currency']
             incoming = pd.read_excel(file_path,sheet_name,usecols=["Incoming"]).to_dict()['Incoming']
@@ -130,29 +164,38 @@ class Transaction:
             dates = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()['Date']
             description = pd.read_excel(file_path,sheet_name,usecols=["Description"]).to_dict()['Description']
             
+            ### category id ###
+           
             for description_text in description.values():
                 lowered_description = str(description_text).lower()
+               
+                if currency_wise[count] != "GBP" and "Converted" not in description[count]:
+                    category_id.append("wise_cat_holidays30")
 
                 matched_category = None
-                count = 0
                 
                 for keyword, category in KEYWORD_TO_CATEGORY["wise"].items():
-                    if currency_wise[count] != "GBP":
-                        matched_category = "wise_cat_holidays30"
-                        category_id.append(matched_category)
-                        
-                    elif keyword.lower() in lowered_description and currency_wise[count] == "GBP":
+                    
+                    
+                    if keyword.lower() in lowered_description and currency_wise[count] == "GBP" and "Converted" not in description[count]:
                         matched_category = category
                         category_id.append(matched_category)
-                    else:
-                        matched_category = "wise_cat_extras33"
-                        category_id.append(matched_category) 
-                    count += 1
-                        
+                    
+                if currency_wise[count] == "GBP" and "Converted" not in description[count] and matched_category == None:
+                    keyword = "unidentified transfer of" + str(outgoing[count]) if math.isnan(incoming[count]) else "unidentified transfer of" + str(incoming[count])
+                    unidentified_transactions.append({keyword:category})
+                    category_id.append("wise_cat_extras33")
+                                
+                count += 1
+                
+            ### dates id ###  
+                    
             for key,val in dates.items():
-                date_fk = str(val)[0:3] + str(val)[5:7] + str(val)[8:10] 
-                date_id.append(date_fk)
+                date_fk = str(val)[0:3] + str(val)[5:7] + str(val)[8:10]
+                if "Converted" not in description[key]:
+                    date_id.append(date_fk)
             
+            ### rest of data ###
             
             for key,val in outgoing.items():
                 if math.isnan(val) and math.isnan(incoming[key]) == False and "Converted" not in description[key]:
@@ -177,11 +220,12 @@ class Transaction:
         # print(f"amount {len(amount)}")
         # print(f"money out {len(money_out)}")
         # print(f"money in {len(money_in)}")
-        # print(f"category id {len(category_id)}")
+        print(f"category id {len(category_id)}")
         # print(f"date id {len(date_id)}")
-        # print(f"category id {category_id}")
+        print(f"category id {category_id}")
      
-        print(unidentified_transactions)
+        # print(starting_balance_2026)
+        # print(unidentified_transactions)
           
         # data = {
         #     "id": transaction_id,
@@ -208,5 +252,5 @@ monzo_file_path = excel_dir / "monzo_excel" / "monzo_statements.xlsx"
 wise_file_path = excel_dir / "wise_excel" / "wise_statements.xlsx"
 
 # print(transaction.transaction_facts(wise_file_path,"2026-05 May"))
-# print(transaction.transaction_facts(barclays_file_path,"2025-12 to 2026-01"))
-print(transaction.transaction_facts(monzo_file_path,"Feb 2026 (01-28)"))
+print(transaction.transaction_facts(barclays_file_path,"2026-02 to 2026-03"))
+# print(transaction.transaction_facts(monzo_file_path,"Feb 2026 (01-28)"))
