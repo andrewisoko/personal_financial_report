@@ -13,7 +13,8 @@ class Date:
         
         id = [ str(val)[0:3] + str(val)[5:7] + str(val)[8:10] for key,val in date_dict["Date"].items()]
         dates = [ str(val) for key,val in date_dict["Date"].items()]
-        year = [ str(val)[5:7] for key,val in date_dict["Date"].items()]
+        year = [ str(val)[0:4] for key,val in date_dict["Date"].items()]
+        month = [ str(val)[5:7] for key,val in date_dict["Date"].items()]
         day = [ str(val)[8:10] for key,val in date_dict["Date"].items()]
         
         date_series = pd.Series(dates)
@@ -27,6 +28,7 @@ class Date:
             "id": id,
             "date":dates,
             "year":year,
+            "month":month,
             "day":day,
             "quarter":quarter,
             "day_of_week_name":weekday

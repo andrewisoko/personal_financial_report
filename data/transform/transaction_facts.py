@@ -2,6 +2,7 @@ import pandas as pd
 import uuid
 from pathlib import Path
 import math
+import calendar
 from personal_financial_report.non_confidential_keywords import KEYWORD_TO_CATEGORY
 
 
@@ -15,7 +16,20 @@ class Transaction:
         STARTING_BALANCE_2026 = pd.read_excel(BCL_FILE_PATH,"2025-12 to 2026-01",usecols=["Balance"]).to_dict()['Balance'][21]
         
         bank_ref = "barclays" if "barclays" in str(file_path) else "monzo" if "monzo" in str(file_path) else "wise"
-        unidentified_transactions = []
+        unidentified_transactions = {
+            "january": [],
+            "february":[],
+            "march":[],
+            "april":[],
+            "may":[],
+            "june":[],
+            "july":[],
+            "august":[],
+            "september":[],
+            "october":[],
+            "november":[],
+            "december":[]
+        }
         
         banks = []   
         transaction_id = []
@@ -39,12 +53,13 @@ class Transaction:
             description = pd.read_excel(file_path,sheet_name,usecols=["Description"]).to_dict()['Description']
             end_balance = len(category_id) - 1 
             
-            
             ### category id ###
             
             for description_text in description.values():
                 lowered_description = str(description_text).lower()
-
+                month = str(dates[count])[6:7]
+                month_name = calendar.month_name[int(month)].lower()
+                
                 matched_category= None
 
                 for keyword, category in KEYWORD_TO_CATEGORY["barclays"].items(): 
@@ -57,9 +72,9 @@ class Transaction:
                     category_id.append("bcl_cat_income01")
                     
                 elif keyword.lower() not in lowered_description:
-                    
-                    keyword = "unidentified transfer of" + str(money_out_bcl[count]) if math.isnan(money_in_bcl[count]) else "unidentified transfer of" + str(money_in_bcl[count])
-                    unidentified_transactions.append({keyword:category})
+                    keyword = "bcl unidentified transfer " + str(count)
+                    amount_unidentified = money_out_bcl[count] if math.isnan(money_in_bcl[count]) else money_in_bcl[count]
+                    unidentified_transactions[month_name].append({keyword:amount_unidentified})
                     category_id.append("bcl_cat_extras18")
                 
                 count += 1
@@ -114,6 +129,8 @@ class Transaction:
                         
             for description_text in description.values():
                 lowered_description = str(description_text).lower()
+                month = str(dates[count])[6:7]
+                month_name = calendar.month_name[int(month)].lower()
 
                 matched_category = None
 
@@ -128,9 +145,9 @@ class Transaction:
                     category_id.append("monzo_cat_transferin29")
                     
                 elif keyword.lower() not in lowered_description:
-                    keyword = "unidentified transfer of" + str(gbp_amount[count])
-                    # print(f"keyword name {keyword} {gbp_amount[count]}")
-                    unidentified_transactions.append({keyword:category})
+                    keyword = "monzo unidentified transfer " + str(count)
+                    amount_unidentified = gbp_amount[count]
+                    unidentified_transactions[month_name].append({keyword:amount_unidentified})
                     category_id.append("monzo_cat_extras28")
                      
                 count += 1
@@ -178,6 +195,8 @@ class Transaction:
            
             for description_text in description.values():
                 lowered_description = str(description_text).lower()
+                month = str(dates[count])[6:7]
+                month_name = calendar.month_name[int(month)].lower()
                
                 if currency_wise[count] != "GBP" and "Converted" not in description[count]:
                     category_id.append("wise_cat_holidays30")
@@ -192,8 +211,9 @@ class Transaction:
                         category_id.append(matched_category)
                     
                 if currency_wise[count] == "GBP" and "Converted" not in description[count] and matched_category == None:
-                    keyword = "unidentified transfer of" + str(outgoing[count]) if math.isnan(incoming[count]) else "unidentified transfer of" + str(incoming[count])
-                    unidentified_transactions.append({keyword:category})
+                    keyword = "wise unidentified transfer " + str(count)
+                    amount_unidentified = outgoing[count] if math.isnan(incoming[count]) else incoming[count]
+                    unidentified_transactions[month_name].append({keyword:amount_unidentified})
                     category_id.append("wise_cat_extras33")
                                 
                 count += 1
@@ -224,18 +244,17 @@ class Transaction:
                     money_in.append(False)
                     money_out.append(True)
                         
-        print(f"banks {len(banks)}")
-        print(f"transaction_id {len(transaction_id)}")
-        print(f"currency {len(currency)}")
-        print(f"amount {len(amount)}")
-        print(f"money out {len(money_out)}")
-        print(f"money in {len(money_in)}")
-        print(f"category id {len(category_id)}")
-        print(f"date id {len(date_id)}")
+        # print(f"banks {len(banks)}")
+        # print(f"transaction_id {len(transaction_id)}")
+        # print(f"currency {len(currency)}")
+        # print(f"amount {len(amount)}")
+        # print(f"money out {len(money_out)}")
+        # print(f"money in {len(money_in)}")
+        # print(f"category id {len(category_id)}")
+        # print(f"date id {len(date_id)}")
         # print(*category_id,sep='\n')
-        
-    
-        # print(starting_balance_2026)
+       
+
         # print(unidentified_transactions)
           
         # data = {
@@ -263,5 +282,5 @@ monzo_file_path = excel_dir / "monzo_excel" / "monzo_statements.xlsx"
 wise_file_path = excel_dir / "wise_excel" / "wise_statements.xlsx"
 
 # print(transaction.transaction_facts(wise_file_path,"2026-05 May"))
-# print(transaction.transaction_facts(barclays_file_path,"2026-05 to 2026-06"))
+print(transaction.transaction_facts(barclays_file_path,"2026-05 to 2026-06"))
 # print(transaction.transaction_facts(monzo_file_path,"Feb 2026 (01-28)"))
