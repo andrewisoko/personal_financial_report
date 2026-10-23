@@ -12,7 +12,7 @@ class Transaction:
         
         EXCEL_DIR = Path(__file__).parent.parent / "extract"/ "excel"
         BCL_FILE_PATH = EXCEL_DIR / "barclays_excel" / "barclays_statements.xlsx"
-        STARTING_BALANCE_2026 = pd.read_excel(BCL_FILE_PATH,"2025-12 to 2026-01",usecols=["Balance"]).to_dict()['Balance'][0]
+        STARTING_BALANCE_2026 = pd.read_excel(BCL_FILE_PATH,"2025-12 to 2026-01",usecols=["Balance"]).to_dict()['Balance'][21]
         
         bank_ref = "barclays" if "barclays" in str(file_path) else "monzo" if "monzo" in str(file_path) else "wise"
         unidentified_transactions = []
@@ -37,6 +37,8 @@ class Transaction:
             money_out_bcl = pd.read_excel(file_path,sheet_name,usecols=["Money Out"]).to_dict()['Money Out']
             money_in_bcl = pd.read_excel(file_path,sheet_name,usecols=["Money In"]).to_dict()["Money In"]
             description = pd.read_excel(file_path,sheet_name,usecols=["Description"]).to_dict()['Description']
+            end_balance = len(category_id) - 1 
+            
             
             ### category id ###
             
@@ -45,7 +47,7 @@ class Transaction:
 
                 matched_category= None
 
-                for keyword, category in KEYWORD_TO_CATEGORY["barclays"].items():
+                for keyword, category in KEYWORD_TO_CATEGORY["barclays"].items(): 
                     if keyword.lower() in lowered_description:
                         matched_category = category
                         category_id.append(matched_category)
@@ -55,18 +57,26 @@ class Transaction:
                     category_id.append("bcl_cat_income01")
                     
                 elif keyword.lower() not in lowered_description:
+                    
                     keyword = "unidentified transfer of" + str(money_out_bcl[count]) if math.isnan(money_in_bcl[count]) else "unidentified transfer of" + str(money_in_bcl[count])
                     unidentified_transactions.append({keyword:category})
                     category_id.append("bcl_cat_extras18")
                 
                 count += 1
+              
+            category_id.pop(0) ## first and last row are containing the start balance and end balance with no transaction details hence not needed.
+            category_id.pop(end_balance)
             
-             ### dates id ###
+            
+            ### dates id ###
              
                 
             for key,val in dates.items():
-                date_fk = str(val)[0:3] + str(val)[5:7] + str(val)[8:10] 
-                date_id.append(date_fk)
+                date_fk = str(val)[0:3] + str(val)[5:7] + str(val)[8:10]
+                if key == 0 or key == len(dates)-1: ## reason of the condition explained in the categories logic
+                    pass
+                else:
+                    date_id.append(date_fk)
                 
             ### rest of data ###
             
@@ -214,16 +224,17 @@ class Transaction:
                     money_in.append(False)
                     money_out.append(True)
                         
-        # print(f"banks {len(banks)}")
-        # print(f"transaction_id {len(transaction_id)}")
-        # print(f"currency {len(currency)}")
-        # print(f"amount {len(amount)}")
-        # print(f"money out {len(money_out)}")
-        # print(f"money in {len(money_in)}")
+        print(f"banks {len(banks)}")
+        print(f"transaction_id {len(transaction_id)}")
+        print(f"currency {len(currency)}")
+        print(f"amount {len(amount)}")
+        print(f"money out {len(money_out)}")
+        print(f"money in {len(money_in)}")
         print(f"category id {len(category_id)}")
-        # print(f"date id {len(date_id)}")
-        print(f"category id {category_id}")
-     
+        print(f"date id {len(date_id)}")
+        # print(*category_id,sep='\n')
+        
+    
         # print(starting_balance_2026)
         # print(unidentified_transactions)
           
@@ -252,5 +263,5 @@ monzo_file_path = excel_dir / "monzo_excel" / "monzo_statements.xlsx"
 wise_file_path = excel_dir / "wise_excel" / "wise_statements.xlsx"
 
 # print(transaction.transaction_facts(wise_file_path,"2026-05 May"))
-print(transaction.transaction_facts(barclays_file_path,"2026-02 to 2026-03"))
+# print(transaction.transaction_facts(barclays_file_path,"2026-05 to 2026-06"))
 # print(transaction.transaction_facts(monzo_file_path,"Feb 2026 (01-28)"))
