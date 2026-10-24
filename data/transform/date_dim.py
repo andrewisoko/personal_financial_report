@@ -38,7 +38,9 @@ class Date:
     
     def history_dates(self,blc_file_path,monzo_file_path,wise_file_path):
         
-        #--------------------barclays-----------------------------#
+        #-----------------------------------------------------------------------------------------#  
+        #---------------------------------BARCLAYS------------------------------------------------# 
+        #-----------------------------------------------------------------------------------------#
          
         blc2_xlsx_container = []
         
@@ -48,8 +50,8 @@ class Date:
 
         while to_num <= 9:
             
-            monzo_sheet_month = self.date_dim(blc_file_path,f"2026-0{from_num} to 2026-0{to_num}")
-            blc2_xlsx_container.append(monzo_sheet_month)
+            bcl_sheet_month = self.date_dim(blc_file_path,f"2026-0{from_num} to 2026-0{to_num}")
+            blc2_xlsx_container.append(bcl_sheet_month)
             
             from_num += 1
             to_num += 1
@@ -62,10 +64,11 @@ class Date:
 
         blc2_xlsx_df = pd.DataFrame(dict(blc_grouped))
        
-        # print(pd.concat([blc1_xlsx_df,blc2_xlsx_df]))
         
         
-        #--------------------monzo-----------------------------#
+        #----------------------------------------------------------------------------------------#               
+        #-----------------------------------MONZO------------------------------------------------#  
+        #----------------------------------------------------------------------------------------#  
         
         monzo_xlsx_container = []
         months_dict = {0:"Jan",1:"Feb",2:"Mar",3:"Apr",4:"May",5:"Jun",6:"Jul",7:"Aug",8:"Sep"}
@@ -96,7 +99,9 @@ class Date:
         monzo2_xlsx_df = pd.DataFrame(dict(monzo_grouped))
     
           
-        #--------------------wise-----------------------------#   
+        #-------------------------------------------------------------------------------------#
+        #---------------------------------WISE------------------------------------------------#
+        #-------------------------------------------------------------------------------------#    
        
         wise_may_2026 = self.date_dim(wise_file_path, "2026-05 May")
         wise_jul_2026 = self.date_dim(wise_file_path, "2026-07 Jul")
@@ -116,7 +121,7 @@ class Date:
         
         return pd.concat(all_frames)
         
-    def latest_dates(self,blc_file_path,monzo_file_path,wise_file_path):
+    def current_month_dates(self,blc_file_path,monzo_file_path,wise_file_path):
         
         #--------------------barclays-----------------------------#
           
