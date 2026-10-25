@@ -88,7 +88,7 @@ class Transaction:
              
                 
             for key,val in dates.items():
-                date_fk = str(val)[0:3] + str(val)[5:7] + str(val)[8:10]
+                date_fk = str(val)[0:4] + str(val)[5:7] + str(val)[8:10]
                 if key == 0 or key == len(dates)-1: ## reason of the condition explained in the categories logic
                     pass
                 else:
@@ -273,33 +273,34 @@ class Transaction:
         return data
       
       
-    def history_transactions(self,blc_file_path,monzo_file_path,wise_file_path):
+    def history_transactions(self,bcl_file_path,monzo_file_path,wise_file_path):
         
         #-----------------------------------------------------------------------------------------#  
         #---------------------------------BARCLAYS------------------------------------------------# 
         #-----------------------------------------------------------------------------------------#
         
-        blc2_xlsx_container = []
+        bcl2_xlsx_container = []
         
         from_num = 1
         to_num = 2
-        blc1_xlsx_df = pd.DataFrame(self.transaction_facts(blc_file_path,"2025-12 to 2026-01")) # bcl 2025 sheet
-
-        while to_num <= 9:
+        last_page_count = len(pd.ExcelFile(bcl_file_path).sheet_names) - 1
+        description = pd.read_excel(bcl_file_path,f"2026-0{from_num} to 2026-0{to_num}",usecols=["Description"]).to_dict()['Description']
+        bcl1_xlsx_df = pd.DataFrame(self.transaction_facts(bcl_file_path,"2025-12 to 2026-01")) # bcl 2025 sheet
+        
+        
+        while to_num <= last_page_count:
             
-            bcl_sheet_month = self.transaction_facts(blc_file_path,f"2026-0{from_num} to 2026-0{to_num}")
-            blc2_xlsx_container.append(bcl_sheet_month)
-            
+            bcl_sheet_month = self.transaction_facts(bcl_file_path,f"2026-0{from_num} to 2026-0{to_num}")
+            bcl2_xlsx_container.append(bcl_sheet_month)
             from_num += 1
             to_num += 1
-            
-        blc_grouped = defaultdict(list)
+        bcl_grouped = defaultdict(list)
         
-        for blc_sheet_month in blc2_xlsx_container:
-            for key, value in blc_sheet_month.items():
-                blc_grouped[key].extend(value)
+        for bcl_sheet_month in bcl2_xlsx_container:
+            for key, value in bcl_sheet_month.items():
+                bcl_grouped[key].extend(value)
 
-        blc2_xlsx_df = pd.DataFrame(dict(blc_grouped))
+        bcl2_xlsx_df = pd.DataFrame(dict(bcl_grouped))
         
         #----------------------------------------------------------------------------------------#               
         #-----------------------------------MONZO------------------------------------------------#  
@@ -352,19 +353,19 @@ class Transaction:
         
         wise_xlsx_df = pd.DataFrame(dict(wise_grouped))
         
-        all_frames = [blc1_xlsx_df,blc2_xlsx_df,monzo1_xlsx_df,monzo2_xlsx_df,wise_xlsx_df]
+        all_frames = [bcl1_xlsx_df,bcl2_xlsx_df,monzo1_xlsx_df,monzo2_xlsx_df,wise_xlsx_df]
         
-        return pd.concat(all_frames)
+        # return pd.concat(all_frames)
 
 
-    def current_month_transactions(self,blc_file_path,monzo_file_path,wise_file_path):
+    def current_month_transactions(self,bcl_file_path,monzo_file_path,wise_file_path):
         
-        #--------------------barclays-----------------------------#
+        #--------------------barclays--------------------------#
           
-        blc_doc = pd.ExcelFile(blc_file_path)
+        blc_doc = pd.ExcelFile(bcl_file_path)
         bcl_sheet_name = blc_doc.sheet_names[-2]
 
-        bcl_xlsx_df = pd.DataFrame(self.transaction_facts(blc_file_path,bcl_sheet_name))
+        bcl_xlsx_df = pd.DataFrame(self.transaction_facts(bcl_file_path,bcl_sheet_name))
         
         #--------------------monzo-----------------------------#
         
@@ -396,4 +397,4 @@ wise_file_path = excel_dir / "wise_excel" / "wise_statements.xlsx"
 # print(transaction.transaction_facts(barclays_file_path,"2026-05 to 2026-06"))
 # print(transaction.transaction_facts(monzo_file_path,"Feb 2026 (01-28)"))
 
-print(transaction.current_month_transactions(barclays_file_path,monzo_file_path,wise_file_path))
+print(transaction.history_transactions(barclays_file_path,monzo_file_path,wise_file_path))

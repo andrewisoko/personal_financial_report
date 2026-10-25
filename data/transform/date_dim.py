@@ -11,7 +11,7 @@ class Date:
     
         date_dict = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()
         
-        id = [ str(val)[0:3] + str(val)[5:7] + str(val)[8:10] for key,val in date_dict["Date"].items()]
+        id = [ str(val)[0:4] + str(val)[5:7] + str(val)[8:10] for key,val in date_dict["Date"].items()]
         dates = [ str(val) for key,val in date_dict["Date"].items()]
         year = [ str(val)[0:4] for key,val in date_dict["Date"].items()]
         month = [ str(val)[5:7] for key,val in date_dict["Date"].items()]
@@ -36,33 +36,34 @@ class Date:
         
         return data
     
-    def history_dates(self,blc_file_path,monzo_file_path,wise_file_path):
+    def history_dates(self,bcl_file_path,monzo_file_path,wise_file_path):
         
         #-----------------------------------------------------------------------------------------#  
         #---------------------------------BARCLAYS------------------------------------------------# 
         #-----------------------------------------------------------------------------------------#
          
-        blc2_xlsx_container = []
+        bcl2_xlsx_container = []
         
         from_num = 1
         to_num = 2
-        blc1_xlsx_df = pd.DataFrame(self.date_dim(blc_file_path,"2025-12 to 2026-01")) # bcl 2025 sheet
+        last_page_count = len(pd.ExcelFile(bcl_file_path).sheet_names) - 1
+        bcl1_xlsx_df = pd.DataFrame(self.date_dim(bcl_file_path,"2025-12 to 2026-01")) # bcl 2025 sheet
 
-        while to_num <= 9:
+        while to_num <= last_page_count:
             
-            bcl_sheet_month = self.date_dim(blc_file_path,f"2026-0{from_num} to 2026-0{to_num}")
-            blc2_xlsx_container.append(bcl_sheet_month)
+            bcl_sheet_month = self.date_dim(bcl_file_path,f"2026-0{from_num} to 2026-0{to_num}")
+            bcl2_xlsx_container.append(bcl_sheet_month)
             
             from_num += 1
             to_num += 1
             
-        blc_grouped = defaultdict(list)
+        bcl_grouped = defaultdict(list)
         
-        for blc_sheet_month in blc2_xlsx_container:
-            for key, value in blc_sheet_month.items():
-                blc_grouped[key].extend(value)
+        for bcl_sheet_month in bcl2_xlsx_container:
+            for key, value in bcl_sheet_month.items():
+                bcl_grouped[key].extend(value)
 
-        blc2_xlsx_df = pd.DataFrame(dict(blc_grouped))
+        bcl2_xlsx_df = pd.DataFrame(dict(bcl_grouped))
        
         
         
@@ -71,12 +72,11 @@ class Date:
         #----------------------------------------------------------------------------------------#  
         
         monzo_xlsx_container = []
-        months_dict = {0:"Jan",1:"Feb",2:"Mar",3:"Apr",4:"May",5:"Jun",6:"Jul",7:"Aug",8:"Sep"}
-        
+        months_dict = {0:"Jan",1:"Feb",2:"Mar",3:"Apr",4:"May",5:"Jun",6:"Jul",7:"Aug",8:"Sep",9:"Oct",10:"Nov",11:"Dec"}
         monzo1_xlsx_df = pd.DataFrame(self.date_dim(monzo_file_path, "Dec 2025 (28-31)")) #2025 sheet
         
         
-        for month_index in range(0,8):
+        for month_index in range(0,last_page_count):
             if month_index == 1:
                 monzo_xlsx_container.append(self.date_dim(monzo_file_path,"Feb 2026 (01-28)"))
             elif month_index == 3:
@@ -85,6 +85,8 @@ class Date:
                 monzo_xlsx_container.append(self.date_dim(monzo_file_path,"Jun 2026 (01-30)"))
             elif month_index == 8:
                 monzo_xlsx_container.append(self.date_dim(monzo_file_path,"Sep 2026 (01-30)"))
+            elif month_index == 10:
+                monzo_xlsx_container.append(self.date_dim(monzo_file_path,"Nov 2026 (01-30)"))
             else:
                 monzo_xlsx_container.append(self.date_dim(monzo_file_path,f"{months_dict[month_index]} 2026 (01-31)"))
                 
@@ -117,7 +119,7 @@ class Date:
         
         wise_xlsx_df = pd.DataFrame(dict(wise_grouped))
        
-        all_frames = [blc1_xlsx_df,blc2_xlsx_df,monzo1_xlsx_df,monzo2_xlsx_df,wise_xlsx_df]
+        all_frames = [bcl1_xlsx_df,bcl2_xlsx_df,monzo1_xlsx_df,monzo2_xlsx_df,wise_xlsx_df]
         
         return pd.concat(all_frames)
         
