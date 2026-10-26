@@ -14,23 +14,10 @@ class Transaction:
         
         EXCEL_DIR = Path(__file__).parent.parent / "extract"/ "excel"
         BCL_FILE_PATH = EXCEL_DIR / "barclays_excel" / "barclays_statements.xlsx"
-        STARTING_BALANCE_2026 = pd.read_excel(BCL_FILE_PATH,"2025-12 to 2026-01",usecols=["Balance"]).to_dict()['Balance'][21]
-        
+
         bank_ref = "barclays" if "barclays" in str(file_path) else "monzo" if "monzo" in str(file_path) else "wise"
-        unidentified_transactions = {
-            "january": [],
-            "february":[],
-            "march":[],
-            "april":[],
-            "may":[],
-            "june":[],
-            "july":[],
-            "august":[],
-            "september":[],
-            "october":[],
-            "november":[],
-            "december":[]
-        }
+        unidentified_transactions = {month: [] for month in list(calendar.month_name)[1:]}
+        payment_date = [] # store main income date for each month, only one value expected.
         
         banks = []   
         transaction_id = []
@@ -38,6 +25,9 @@ class Transaction:
         currency = []
         money_out = []
         money_in = []
+        month_payment_period = [] # month from the payment received in descending order.
+        
+
         date_id = []
         category_id = []
     
@@ -48,22 +38,30 @@ class Transaction:
         if bank_ref == "barclays":
             
             count = 0 
-            dates = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()['Date']
-            money_out_bcl = pd.read_excel(file_path,sheet_name,usecols=["Money Out"]).to_dict()['Money Out']
-            money_in_bcl = pd.read_excel(file_path,sheet_name,usecols=["Money In"]).to_dict()["Money In"]
-            description = pd.read_excel(file_path,sheet_name,usecols=["Description"]).to_dict()['Description']
-            end_balance = len(category_id) - 1 
+            dates:dict = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()['Date']
+            money_out_bcl:dict = pd.read_excel(file_path,sheet_name,usecols=["Money Out"]).to_dict()['Money Out']
+            money_in_bcl:dict = pd.read_excel(file_path,sheet_name,usecols=["Money In"]).to_dict()["Money In"]
+            description:dict = pd.read_excel(file_path,sheet_name,usecols=["Description"]).to_dict()['Description']
+            end_balance:int = len(category_id) - 1 
             
             ### category id ###
-            
+                                    
             for description_text in description.values():
                 lowered_description = str(description_text).lower()
                 month = str(dates[count])[6:7]
-                month_name = calendar.month_name[int(month)].lower()
+                month_name = calendar.month_name[int(month)]
                 
+    
                 matched_category= None
-
-                for keyword, category in KEYWORD_TO_CATEGORY["barclays"].items(): 
+                for keyword, category in KEYWORD_TO_CATEGORY["barclays"].items():
+                    
+                    ### appending date of main income received
+                    bcl_amount:float = money_out_bcl[count] if math.isnan(money_in_bcl[count]) else money_in_bcl[count]
+                    if category == "bcl_cat_income01" and bcl_amount > 999:
+                        payment_date.append(dates[count])
+                        break
+                   
+                    
                     if keyword.lower() in lowered_description:
                         matched_category = category
                         category_id.append(matched_category)
@@ -74,16 +72,28 @@ class Transaction:
                     
                 elif keyword.lower() not in lowered_description:
                     keyword = "bcl unidentified transfer " + str(count)
-                    amount_unidentified = money_out_bcl[count] if math.isnan(money_in_bcl[count]) else money_in_bcl[count]
+                    amount_unidentified:float = money_out_bcl[count] if math.isnan(money_in_bcl[count]) else money_in_bcl[count]
                     unidentified_transactions[month_name].append({keyword:amount_unidentified})
                     category_id.append("bcl_cat_extras18")
                 
                 count += 1
+                
+            ### assiging month at each row on the sheet based on time comparison between row and main income date.
+                
+            if len(payment_date) <= 1:  
+                for key,val in dates.items():
+                    if key == 0 or key == len(dates) -1:
+                        pass
+                    else:
+                       month_payment_period.append(calendar.month_name[int(month) - 1] if payment_date[0] > val else calendar.month_name[int(month)])
+            else:
+                payment_date.clear()
+              
               
             category_id.pop(0) ## first and last row are containing the start balance and end balance with no transaction details hence not needed.
             category_id.pop(end_balance)
-            
-            
+     
+             
             ### dates id ###
              
                 
@@ -258,19 +268,19 @@ class Transaction:
 
         # print(unidentified_transactions)
           
-        data = {
-            "id": transaction_id,
-            "bank": banks,
-            "amount": amount,
-            "currency": currency,
-            "money_in":money_in,
-            "money_out":money_out,
-            "category_id":category_id,
-            "date_id": date_id
+        # data = {
+        #     "id": transaction_id,
+        #     "bank": banks,
+        #     "amount": amount,
+        #     "currency": currency,
+        #     "money_in":money_in,
+        #     "money_out":money_out,
+        #     "category_id":category_id,
+        #     "date_id": date_id
             
-        }
+        # }
         
-        return data
+        # return data
       
       
     def history_transactions(self,bcl_file_path,monzo_file_path,wise_file_path):
@@ -284,7 +294,6 @@ class Transaction:
         from_num = 1
         to_num = 2
         last_page_count = len(pd.ExcelFile(bcl_file_path).sheet_names) - 1
-        description = pd.read_excel(bcl_file_path,f"2026-0{from_num} to 2026-0{to_num}",usecols=["Description"]).to_dict()['Description']
         bcl1_xlsx_df = pd.DataFrame(self.transaction_facts(bcl_file_path,"2025-12 to 2026-01")) # bcl 2025 sheet
         
         
@@ -394,7 +403,7 @@ monzo_file_path = excel_dir / "monzo_excel" / "monzo_statements.xlsx"
 wise_file_path = excel_dir / "wise_excel" / "wise_statements.xlsx"
 
 # print(transaction.transaction_facts(wise_file_path,"2026-05 May"))
-# print(transaction.transaction_facts(barclays_file_path,"2026-05 to 2026-06"))
+print(transaction.transaction_facts(barclays_file_path,"2026-05 to 2026-06"))
 # print(transaction.transaction_facts(monzo_file_path,"Feb 2026 (01-28)"))
 
-print(transaction.history_transactions(barclays_file_path,monzo_file_path,wise_file_path))
+# print(transaction.history_transactions(barclays_file_path,monzo_file_path,wise_file_path))

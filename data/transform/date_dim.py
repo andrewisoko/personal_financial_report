@@ -46,6 +46,8 @@ class Date:
         
         from_num = 1
         to_num = 2
+        # month_last_column = str(dates[len(dates)-1])[5:7]
+        # increment_month_func = lambda mon_str: f"0{int(mon_str) + 1}" if int(mon_str) < 9 else int(mon_str) + 1
         last_page_count = len(pd.ExcelFile(bcl_file_path).sheet_names) - 1
         bcl1_xlsx_df = pd.DataFrame(self.date_dim(bcl_file_path,"2025-12 to 2026-01")) # bcl 2025 sheet
 
