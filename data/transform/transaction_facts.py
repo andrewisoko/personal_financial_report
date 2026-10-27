@@ -10,14 +10,14 @@ from personal_financial_report.non_confidential_keywords import KEYWORD_TO_CATEG
 
 class Transaction:
     
+    def __init__(self):
+        self.payment_dates = [] # store main income date for each month, only one value expected.
+        
     def transaction_facts(self,file_path,sheet_name):
         
-        EXCEL_DIR = Path(__file__).parent.parent / "extract"/ "excel"
-        BCL_FILE_PATH = EXCEL_DIR / "barclays_excel" / "barclays_statements.xlsx"
-
+       
         bank_ref = "barclays" if "barclays" in str(file_path) else "monzo" if "monzo" in str(file_path) else "wise"
         unidentified_transactions = {month: [] for month in list(calendar.month_name)[1:]}
-        payment_date = [] # store main income date for each month, only one value expected.
         
         banks = []   
         transaction_id = []
@@ -49,7 +49,7 @@ class Transaction:
             for description_text in description.values():
                 lowered_description = str(description_text).lower()
                 month = str(dates[count])[6:7]
-                month_name = calendar.month_name[int(month)]
+                month_name:str = calendar.month_name[int(month)]
                 
     
                 matched_category= None
@@ -58,7 +58,7 @@ class Transaction:
                     ### appending date of main income received
                     bcl_amount:float = money_out_bcl[count] if math.isnan(money_in_bcl[count]) else money_in_bcl[count]
                     if category == "bcl_cat_income01" and bcl_amount > 999:
-                        payment_date.append(dates[count])
+                        self.payment_dates.append(dates[count])
                         break
                    
                     
@@ -79,21 +79,17 @@ class Transaction:
                 count += 1
                 
             ### assiging month at each row on the sheet based on time comparison between row and main income date.
-                
-            if len(payment_date) <= 1:  
-                for key,val in dates.items():
-                    if key == 0 or key == len(dates) -1:
-                        pass
-                    else:
-                       month_payment_period.append(calendar.month_name[int(month) - 1] if payment_date[0] > val else calendar.month_name[int(month)])
-            else:
-                payment_date.clear()
-              
+            
+            for key,val in dates.items():
+                if key == 0 or key == len(dates)-1:
+                    pass
+                else:
+                    month_payment_period.append(calendar.month_name[int(month) - 1] if self.payment_dates[-1] > val else calendar.month_name[int(month)])    
+       
               
             category_id.pop(0) ## first and last row are containing the start balance and end balance with no transaction details hence not needed.
             category_id.pop(end_balance)
-     
-             
+              
             ### dates id ###
              
                 
@@ -124,24 +120,27 @@ class Transaction:
                     currency.append("GBP")
                     money_in.append(False)
                     money_out.append(True)
-                    
+                 
+            # print(payment_date)   
     #----------------------------------------------------------------------------------------#               
     #-----------------------------------MONZO------------------------------------------------#  
     #----------------------------------------------------------------------------------------#   
-         
+        
         elif bank_ref == "monzo":
             
             count = 0
             gbp_amount = pd.read_excel(file_path,sheet_name,usecols=["(GBP) Amount"])["(GBP) Amount"]
             dates = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()['Date']
             description = pd.read_excel(file_path,sheet_name,usecols=["Description"]).to_dict()['Description']
+            monzo_date_bc_payment = [val for key,val in dates.items() if pd.Timestamp(val) in self.payment_dates]
+            
             
             ### category id ###
                         
             for description_text in description.values():
                 lowered_description = str(description_text).lower()
                 month = str(dates[count])[6:7]
-                month_name = calendar.month_name[int(month)].lower()
+                month_name:str = calendar.month_name[int(month)]
 
                 matched_category = None
 
@@ -162,8 +161,13 @@ class Transaction:
                     category_id.append("monzo_cat_extras28")
                      
                 count += 1
-                
-                
+            
+            ### different from barlays, extracting relevant payment date from already populated list
+            if len(monzo_date_bc_payment) > 0:
+                for key,val in dates.items():
+                    month_payment_period.append(calendar.month_name[int(month) - 1] if monzo_date_bc_payment[0] > val else calendar.month_name[int(month)])    
+            else:
+                month_payment_period.append(calendar.month_name[int(month)])
             ### dates id ### 
             
             for key,val in dates.items():
@@ -201,13 +205,15 @@ class Transaction:
             outgoing = pd.read_excel(file_path,sheet_name,usecols=["Outgoing"]).to_dict()['Outgoing']
             dates = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()['Date']
             description = pd.read_excel(file_path,sheet_name,usecols=["Description"]).to_dict()['Description']
+            wise_date_bc_payment = [val for key,val in dates.items() if pd.Timestamp(val) in self.payment_dates]
+          
             
             ### category id ###
            
             for description_text in description.values():
                 lowered_description = str(description_text).lower()
                 month = str(dates[count])[6:7]
-                month_name = calendar.month_name[int(month)].lower()
+                month_name = calendar.month_name[int(month)]
                
                 if currency_wise[count] != "GBP" and "Converted" not in description[count]:
                     category_id.append("wise_cat_holidays30")
@@ -228,6 +234,13 @@ class Transaction:
                     category_id.append("wise_cat_extras33")
                                 
                 count += 1
+                
+            
+            for key,val in dates.items():
+                if "Converted" not in description[key] and len(wise_date_bc_payment) > 0:
+                    month_payment_period.append(calendar.month_name[int(month) - 1] if wise_date_bc_payment[0] > val else calendar.month_name[int(month)]) 
+                elif "Converted" not in description[key]:
+                    month_payment_period.append(calendar.month_name[int(month)])
                 
             ### dates id ###  
                     
@@ -255,32 +268,22 @@ class Transaction:
                     money_in.append(False)
                     money_out.append(True)
                         
-        # print(f"banks {len(banks)}")
-        # print(f"transaction_id {len(transaction_id)}")
-        # print(f"currency {len(currency)}")
-        # print(f"amount {len(amount)}")
-        # print(f"money out {len(money_out)}")
-        # print(f"money in {len(money_in)}")
-        # print(f"category id {len(category_id)}")
-        # print(f"date id {len(date_id)}")
-        # print(*category_id,sep='\n')
-       
-
-        # print(unidentified_transactions)
-          
-        # data = {
-        #     "id": transaction_id,
-        #     "bank": banks,
-        #     "amount": amount,
-        #     "currency": currency,
-        #     "money_in":money_in,
-        #     "money_out":money_out,
-        #     "category_id":category_id,
-        #     "date_id": date_id
-            
-        # }
+         
         
-        # return data
+        data = {
+            "id": transaction_id,
+            "bank": banks,
+            "amount": amount,
+            "currency": currency,
+            "money_in":money_in,
+            "money_out":money_out,
+            "month_payment_period":month_payment_period,
+            "category_id":category_id,
+            "date_id": date_id
+            
+        }
+        
+        return data
       
       
     def history_transactions(self,bcl_file_path,monzo_file_path,wise_file_path):
@@ -293,16 +296,19 @@ class Transaction:
         
         from_num = 1
         to_num = 2
+        
+        month_format = lambda num: f"0{num}" if num <= 9 else str(num)
         last_page_count = len(pd.ExcelFile(bcl_file_path).sheet_names) - 1
         bcl1_xlsx_df = pd.DataFrame(self.transaction_facts(bcl_file_path,"2025-12 to 2026-01")) # bcl 2025 sheet
-        
-        
+
         while to_num <= last_page_count:
             
-            bcl_sheet_month = self.transaction_facts(bcl_file_path,f"2026-0{from_num} to 2026-0{to_num}")
+            bcl_sheet_month = self.transaction_facts(bcl_file_path,f"2026-{month_format(from_num)} to 2026-{month_format(to_num)}")
             bcl2_xlsx_container.append(bcl_sheet_month)
+            
             from_num += 1
             to_num += 1
+            
         bcl_grouped = defaultdict(list)
         
         for bcl_sheet_month in bcl2_xlsx_container:
@@ -364,7 +370,7 @@ class Transaction:
         
         all_frames = [bcl1_xlsx_df,bcl2_xlsx_df,monzo1_xlsx_df,monzo2_xlsx_df,wise_xlsx_df]
         
-        # return pd.concat(all_frames)
+        return pd.concat(all_frames)
 
 
     def current_month_transactions(self,bcl_file_path,monzo_file_path,wise_file_path):
@@ -402,8 +408,5 @@ barclays_file_path = excel_dir / "barclays_excel" / "barclays_statements.xlsx"
 monzo_file_path = excel_dir / "monzo_excel" / "monzo_statements.xlsx"
 wise_file_path = excel_dir / "wise_excel" / "wise_statements.xlsx"
 
-# print(transaction.transaction_facts(wise_file_path,"2026-05 May"))
-print(transaction.transaction_facts(barclays_file_path,"2026-05 to 2026-06"))
-# print(transaction.transaction_facts(monzo_file_path,"Feb 2026 (01-28)"))
 
-# print(transaction.history_transactions(barclays_file_path,monzo_file_path,wise_file_path))
+print(transaction.history_transactions(barclays_file_path,monzo_file_path,wise_file_path))

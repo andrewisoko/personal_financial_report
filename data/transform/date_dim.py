@@ -6,9 +6,12 @@ from collections import defaultdict
 
 class Date:
     
+    def __init__(self):
+        pass
+    
     def date_dim(self,file_path,sheet_name):
         
-    
+        
         date_dict = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()
         
         id = [ str(val)[0:4] + str(val)[5:7] + str(val)[8:10] for key,val in date_dict["Date"].items()]
@@ -46,14 +49,14 @@ class Date:
         
         from_num = 1
         to_num = 2
-        # month_last_column = str(dates[len(dates)-1])[5:7]
-        # increment_month_func = lambda mon_str: f"0{int(mon_str) + 1}" if int(mon_str) < 9 else int(mon_str) + 1
+        
+        month_format = lambda num: f"0{num}" if num <= 9 else str(num)
         last_page_count = len(pd.ExcelFile(bcl_file_path).sheet_names) - 1
         bcl1_xlsx_df = pd.DataFrame(self.date_dim(bcl_file_path,"2025-12 to 2026-01")) # bcl 2025 sheet
 
         while to_num <= last_page_count:
             
-            bcl_sheet_month = self.date_dim(bcl_file_path,f"2026-0{from_num} to 2026-0{to_num}")
+            bcl_sheet_month = self.date_dim(bcl_file_path,f"2026-{month_format(from_num)} to 2026-{month_format(to_num)}")
             bcl2_xlsx_container.append(bcl_sheet_month)
             
             from_num += 1
@@ -67,7 +70,6 @@ class Date:
 
         bcl2_xlsx_df = pd.DataFrame(dict(bcl_grouped))
        
-        
         
         #----------------------------------------------------------------------------------------#               
         #-----------------------------------MONZO------------------------------------------------#  
@@ -123,7 +125,7 @@ class Date:
        
         all_frames = [bcl1_xlsx_df,bcl2_xlsx_df,monzo1_xlsx_df,monzo2_xlsx_df,wise_xlsx_df]
         
-        return pd.concat(all_frames)
+        # return pd.concat(all_frames)
         
     def current_month_dates(self,blc_file_path,monzo_file_path,wise_file_path):
         
