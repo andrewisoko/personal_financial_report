@@ -125,7 +125,7 @@ class Date:
        
         all_frames = [bcl1_xlsx_df,bcl2_xlsx_df,monzo1_xlsx_df,monzo2_xlsx_df,wise_xlsx_df]
         
-        # return pd.concat(all_frames)
+        return pd.concat(all_frames)
         
     def current_month_dates(self,blc_file_path,monzo_file_path,wise_file_path):
         
