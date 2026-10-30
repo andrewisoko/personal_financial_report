@@ -24,34 +24,26 @@ class ValidateHistory:
                                calendar.month_name[6]:85,
                                calendar.month_name[7]:167,
                                calendar.month_name[8]:121,
-                               calendar.month_name[12]:37, #2025
+                               calendar.month_name[9]:118
                                }
         
-        count_rows_per_month = []
-        count_months = 1
+       
         exp_row_index = 0
         
         df_dict = self.df_converter(dates_dataframe)
-        months_df =  df_dict["month"]
-        months_df = [month for month in months_df if month != '12']
+        months_df = [month for month in self.df_converter(dates_dataframe)["month"] if month != "12"]
         
-        
-        while count_months < 13:
-            month_format = lambda conto : F"0{conto}" if count_months <= 9 else str(conto)
-            count_rows_per_month.append(months_df.count(month_format(count_months)))
-            count_months += 1
-        
-        count_rows_per_month = [row_count for row_count in count_rows_per_month if row_count != 0]
-      
+        count_rows_per_month = [months_df.count(f"{month:02}") for month in range(1,13) if months_df.count(f"{month:02}") != 0]
+    
         for key,val in EXPECTED_ROWS_COUNT.items():
             if val == count_rows_per_month[exp_row_index]:
                 exp_row_index += 1
             
-        if exp_row_index == len(list(EXPECTED_ROWS_COUNT)) - 1:   
-            return "all dates rows validated"
-        else:
-            print(exp_row_index)  
-            return False
+        return (
+            "all dates rows validated"
+            if list(EXPECTED_ROWS_COUNT.values()) == count_rows_per_month
+            else False
+        )
         
         
 validation = ValidateHistory() 
