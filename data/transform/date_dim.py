@@ -23,8 +23,8 @@ class Date:
         date_series = pd.Series(dates)
         datetimes = pd.to_datetime(date_series)
     
-        quarter = datetimes.dt.quarter.to_list()
-        weekday = datetimes.dt.weekday.to_list()
+        quarter = [str(qrt) for qrt in datetimes.dt.quarter.to_list()]
+        weekday = [str(wkd) for wkd in datetimes.dt.weekday.to_list()]
            
         
         data = {
@@ -34,7 +34,7 @@ class Date:
             "month":month,
             "day":day,
             "quarter":quarter,
-            "day_of_week_name":weekday
+            "day_of_week":weekday
         }
         
         return data

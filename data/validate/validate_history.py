@@ -14,7 +14,11 @@ class ValidateHistory:
     
     def date_dim_validate(self,dates_dataframe):
         
-        # tot dates rows for each month with all banks combined, rows including start and end date from barclays
+        df_dict = self.df_converter(dates_dataframe)
+        
+        # 1. tot dates rows for each month with all banks combined, rows including start and end date from barclays
+        
+        
         EXPECTED_ROWS_COUNT= { 
                                calendar.month_name[1]:79,
                                calendar.month_name[2]:50,
@@ -39,13 +43,35 @@ class ValidateHistory:
             if val == count_rows_per_month[exp_row_index]:
                 exp_row_index += 1
             
-        return (
-            "all dates rows validated"
+        print (
+            "all dates rows validated ✅"
             if list(EXPECTED_ROWS_COUNT.values()) == count_rows_per_month
             else False
         )
         
+        # 2.  None values checks
         
+        
+  
+            
+        # 3. Id check
+        
+        matches = 0
+        ids_formatted = [id_date[0:4] + "-" + id_date[4:6] + "-" + id_date[6:8]  for id_date in df_dict["id"]]
+        dates_notime = [date[0:10] for date in df_dict["date"]]
+        
+        for id_in_date in ids_formatted:
+            if id_in_date == dates_notime[matches]:
+                matches += 1
+        print("all ids matching with respective dates ✅"
+              if matches == len(df_dict["id"])  and matches == len(df_dict["date"])  else False
+              )
+        
+        # 4. types check
+     
+
+        
+    
 validation = ValidateHistory() 
 dates = Date()
 
