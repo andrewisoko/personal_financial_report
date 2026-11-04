@@ -1,6 +1,8 @@
 import pandas as pd
 from personal_financial_report.data.transform.date_dim import Date
+from personal_financial_report.data.transform.transaction_facts import Transaction
 from pathlib import Path
+
 import calendar
 
 class ValidateHistory:
@@ -71,10 +73,30 @@ class ValidateHistory:
         assert all( isinstance( item, str) for item in all_values)
         
         return True
+     
+    def transaction_facts_validate(self,tr_dataframe):
         
-    
+        df_dict = self.df_converter(tr_dataframe)
+        
+        # 1. tot month periods with all banks included
+     
+        EXPECTED_ROWS_COUNT= { 
+            calendar.month_name[1]:64,
+            calendar.month_name[2]:57,
+            calendar.month_name[3]:72,
+            calendar.month_name[4]:74,
+            calendar.month_name[5]:181,
+            calendar.month_name[6]:108,
+            calendar.month_name[7]:126,
+            calendar.month_name[8]:52,
+            calendar.month_name[9]:44
+        }
+        
+        months_period = [month for month in df_dict["month_payment_period"]] 
+       
 validation = ValidateHistory() 
 dates = Date()
+transactions = Transaction()
 
 excel_dir = Path(__file__).parent.parent / "extract"/ "excel"
 
@@ -82,5 +104,5 @@ barclays_file_path = excel_dir / "barclays_excel" / "barclays_statements.xlsx"
 monzo_file_path = excel_dir / "monzo_excel" / "monzo_statements.xlsx"
 wise_file_path = excel_dir / "wise_excel" / "wise_statements.xlsx"
 
-date_validation = validation.date_dim_validate(dates.history_dates(barclays_file_path,monzo_file_path,wise_file_path))
+date_validation = validation.transaction_facts_validate(transactions.history_transactions(barclays_file_path,monzo_file_path,wise_file_path))
 print(date_validation) 

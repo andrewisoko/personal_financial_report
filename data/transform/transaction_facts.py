@@ -84,7 +84,13 @@ class Transaction:
                 if key == 0 or key == len(dates)-1:
                     pass
                 else:
-                    month_payment_period.append(calendar.month_name[int(month) - 1] if self.payment_dates[-1] > val else calendar.month_name[int(month)])    
+                    if self.payment_dates[-1] == pd.Timestamp("2025-12-31 00:00:00"):
+                        month_payment_period.append("December 2025" if val < self.payment_dates[-1] else "January")
+                    elif "-12-2" in str(self.payment_dates[-1]) or "-12-3" in str(self.payment_dates[-1]):
+                        month_payment_period.append("December" if val < self.payment_dates[-1] else "January")
+                    else:
+                        month_payment_period.append("bcl" + str(calendar.month_name[int(month) - 1]) if self.payment_dates[-1] > val else "bcl" + str(calendar.month_name[int(month)])) 
+    
        
               
             category_id.pop(0) ## first and last row are containing the start balance and end balance with no transaction details hence not needed.
@@ -139,7 +145,7 @@ class Transaction:
                         
             for description_text in description.values():
                 lowered_description = str(description_text).lower()
-                month = str(dates[count])[6:7]
+                month = str(dates[count])[5:7]
                 month_name:str = calendar.month_name[int(month)]
 
                 matched_category = None
@@ -165,9 +171,18 @@ class Transaction:
             ### different from barlays, extracting relevant payment date from already populated list
             if len(monzo_date_bc_payment) > 0:
                 for key,val in dates.items():
-                    month_payment_period.append(calendar.month_name[int(month) - 1] if monzo_date_bc_payment[0] > val else calendar.month_name[int(month)])    
+                    if monzo_date_bc_payment[0] == pd.Timestamp("2025-12-31 00:00:00"):
+                        month_payment_period.append("December 2025" if val < monzo_date_bc_payment[0] else "January")
+                    elif "-12-2" in str(monzo_date_bc_payment[0]) or "-12-3" in str(monzo_date_bc_payment[0]):
+                        month_payment_period.append("December" if val < monzo_date_bc_payment[0] else "January")
+                    else:
+                        month_payment_period.append(str(calendar.month_name[int(month)]) if monzo_date_bc_payment[0] > val  else str(calendar.month_name[int(month) + 1]))
             else:
                 month_payment_period.append(calendar.month_name[int(month)])
+            
+            # print(monzo_date_bc_payment[0])
+            
+                 
             ### dates id ### 
             
             for key,val in dates.items():
@@ -192,7 +207,7 @@ class Transaction:
                     currency.append("GBP")
                     money_in.append(True)
                     money_out.append(False)
-    
+                    
     #-------------------------------------------------------------------------------------#
     #---------------------------------WISE------------------------------------------------#
     #-------------------------------------------------------------------------------------#                
@@ -409,4 +424,4 @@ monzo_file_path = excel_dir / "monzo_excel" / "monzo_statements.xlsx"
 wise_file_path = excel_dir / "wise_excel" / "wise_statements.xlsx"
 
 
-print(transaction.history_transactions(barclays_file_path,monzo_file_path,wise_file_path))
+# print(transaction.history_transactions(barclays_file_path,monzo_file_path,wise_file_path))
