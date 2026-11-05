@@ -94,6 +94,7 @@ class ValidateHistory:
         
         months_period = [month for month in df_dict["month_payment_period"]] 
        
+        
 validation = ValidateHistory() 
 dates = Date()
 transactions = Transaction()

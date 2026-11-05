@@ -48,7 +48,7 @@ class Transaction:
                                     
             for description_text in description.values():
                 lowered_description = str(description_text).lower()
-                month = str(dates[count])[6:7]
+                month = str(dates[count])[5:7]
                 month_name:str = calendar.month_name[int(month)]
                 
     
@@ -84,12 +84,14 @@ class Transaction:
                 if key == 0 or key == len(dates)-1:
                     pass
                 else:
-                    if self.payment_dates[-1] == pd.Timestamp("2025-12-31 00:00:00"):
-                        month_payment_period.append("December 2025" if val < self.payment_dates[-1] else "January")
-                    elif "-12-2" in str(self.payment_dates[-1]) or "-12-3" in str(self.payment_dates[-1]):
+                    if self.payment_dates[-1] == pd.Timestamp("2025-12-31 00:00:00"): 
+                        month_payment_period.append("December 2025" if val < self.payment_dates[-1] else "bclJanuary")
+                    elif "-12-" in str(self.payment_dates[-1]):
                         month_payment_period.append("December" if val < self.payment_dates[-1] else "January")
                     else:
-                        month_payment_period.append("bcl" + str(calendar.month_name[int(month) - 1]) if self.payment_dates[-1] > val else "bcl" + str(calendar.month_name[int(month)])) 
+                        month = str(dates[0])[5:7] # resetting the month count
+                        month_payment_period.append(calendar.month_name[int(month)] if self.payment_dates[-1] > val else calendar.month_name[int(month) + 1])
+                       
     
        
               
@@ -173,7 +175,7 @@ class Transaction:
                 for key,val in dates.items():
                     if monzo_date_bc_payment[0] == pd.Timestamp("2025-12-31 00:00:00"):
                         month_payment_period.append("December 2025" if val < monzo_date_bc_payment[0] else "January")
-                    elif "-12-2" in str(monzo_date_bc_payment[0]) or "-12-3" in str(monzo_date_bc_payment[0]):
+                    elif "-12-" in str(monzo_date_bc_payment[0]):
                         month_payment_period.append("December" if val < monzo_date_bc_payment[0] else "January")
                     else:
                         month_payment_period.append(str(calendar.month_name[int(month)]) if monzo_date_bc_payment[0] > val  else str(calendar.month_name[int(month) + 1]))
@@ -227,7 +229,7 @@ class Transaction:
            
             for description_text in description.values():
                 lowered_description = str(description_text).lower()
-                month = str(dates[count])[6:7]
+                month = str(dates[count])[5:7]
                 month_name = calendar.month_name[int(month)]
                
                 if currency_wise[count] != "GBP" and "Converted" not in description[count]:
@@ -253,9 +255,15 @@ class Transaction:
             
             for key,val in dates.items():
                 if "Converted" not in description[key] and len(wise_date_bc_payment) > 0:
-                    month_payment_period.append(calendar.month_name[int(month) - 1] if wise_date_bc_payment[0] > val else calendar.month_name[int(month)]) 
+                    if monzo_date_bc_payment[0] == pd.Timestamp("2025-12-31 00:00:00"):
+                        month_payment_period.append("December 2025" if val < monzo_date_bc_payment[0] else "January")
+                    elif "-12-" in str(monzo_date_bc_payment[0]):
+                        month_payment_period.append("December" if val < monzo_date_bc_payment[0] else "January")
+                    else:
+                        month_payment_period.append(str(calendar.month_name[int(month)]) if monzo_date_bc_payment[0] > val  else str(calendar.month_name[int(month) + 1]))
                 elif "Converted" not in description[key]:
                     month_payment_period.append(calendar.month_name[int(month)])
+                    
                 
             ### dates id ###  
                     
