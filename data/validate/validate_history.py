@@ -2,7 +2,6 @@ import pandas as pd
 from personal_financial_report.data.transform.date_dim import Date
 from personal_financial_report.data.transform.transaction_facts import Transaction
 from pathlib import Path
-
 import calendar
 
 class ValidateHistory:
@@ -78,22 +77,24 @@ class ValidateHistory:
         
         df_dict = self.df_converter(tr_dataframe)
         
+        
         # 1. tot month periods with all banks included
      
         EXPECTED_ROWS_COUNT= { 
             calendar.month_name[1]:64,
-            calendar.month_name[2]:57,
+            calendar.month_name[2]:59,
             calendar.month_name[3]:72,
-            calendar.month_name[4]:74,
-            calendar.month_name[5]:181,
-            calendar.month_name[6]:108,
-            calendar.month_name[7]:126,
-            calendar.month_name[8]:52,
-            calendar.month_name[9]:44
+            calendar.month_name[4]:80,
+            calendar.month_name[5]:170,
+            calendar.month_name[6]:86,
+            calendar.month_name[7]:143,
+            calendar.month_name[8]:112,
+            calendar.month_name[9]:60
         }
         
-        months_period = [month for month in df_dict["month_payment_period"]] 
-       
+        months_period = [month for month in df_dict["month_payment_period"]]
+        count_rows_per_month = [months_period.count(calendar.month_name[month]) for month in range(1,13) if calendar.month_name[month] in months_period]
+        
         
 validation = ValidateHistory() 
 dates = Date()

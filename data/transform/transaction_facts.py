@@ -4,6 +4,7 @@ from pathlib import Path
 import math
 import calendar
 from collections import defaultdict
+import numpy as np
 from personal_financial_report.non_confidential_keywords import KEYWORD_TO_CATEGORY
 
 
@@ -85,7 +86,7 @@ class Transaction:
                     pass
                 else:
                     if self.payment_dates[-1] == pd.Timestamp("2025-12-31 00:00:00"): 
-                        month_payment_period.append("December 2025" if val < self.payment_dates[-1] else "bclJanuary")
+                        month_payment_period.append("December 2025" if val < self.payment_dates[-1] else "January")
                     elif "-12-" in str(self.payment_dates[-1]):
                         month_payment_period.append("December" if val < self.payment_dates[-1] else "January")
                     else:
@@ -140,7 +141,9 @@ class Transaction:
             gbp_amount = pd.read_excel(file_path,sheet_name,usecols=["(GBP) Amount"])["(GBP) Amount"]
             dates = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()['Date']
             description = pd.read_excel(file_path,sheet_name,usecols=["Description"]).to_dict()['Description']
-            monzo_date_bc_payment = [val for key,val in dates.items() if pd.Timestamp(val) in self.payment_dates]
+           
+            month_in_dates = list(set([calendar.month_name[int(str(month)[5:7])] for key,month in dates.items()]))
+            monzo_date_bc_payment = [payment_dt_month for payment_dt_month in self.payment_dates if calendar.month_name[int(str(payment_dt_month)[5:7])] == month_in_dates[0]] 
             
             
             ### category id ###
@@ -170,6 +173,7 @@ class Transaction:
                      
                 count += 1
             
+    
             ### different from barlays, extracting relevant payment date from already populated list
             if len(monzo_date_bc_payment) > 0:
                 for key,val in dates.items():
@@ -178,11 +182,11 @@ class Transaction:
                     elif "-12-" in str(monzo_date_bc_payment[0]):
                         month_payment_period.append("December" if val < monzo_date_bc_payment[0] else "January")
                     else:
-                        month_payment_period.append(str(calendar.month_name[int(month)]) if monzo_date_bc_payment[0] > val  else str(calendar.month_name[int(month) + 1]))
+                        month_payment_period.append(calendar.month_name[int(month)] if monzo_date_bc_payment[0] > val  else calendar.month_name[int(month) + 1])
             else:
-                month_payment_period.append(calendar.month_name[int(month)])
+                month_payment_period.append((calendar.month_name[int(month)]))
             
-            # print(monzo_date_bc_payment[0])
+    
             
                  
             ### dates id ### 
@@ -222,9 +226,10 @@ class Transaction:
             outgoing = pd.read_excel(file_path,sheet_name,usecols=["Outgoing"]).to_dict()['Outgoing']
             dates = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()['Date']
             description = pd.read_excel(file_path,sheet_name,usecols=["Description"]).to_dict()['Description']
-            wise_date_bc_payment = [val for key,val in dates.items() if pd.Timestamp(val) in self.payment_dates]
-          
             
+            month_in_dates = list(set([calendar.month_name[int(str(month)[5:7])] for key,month in dates.items()]))
+            wise_date_bc_payment = [payment_dt_month for payment_dt_month in self.payment_dates if calendar.month_name[int(str(payment_dt_month)[5:7])] == month_in_dates[0]] 
+                     
             ### category id ###
            
             for description_text in description.values():
@@ -252,15 +257,15 @@ class Transaction:
                                 
                 count += 1
                 
-            
+           
             for key,val in dates.items():
                 if "Converted" not in description[key] and len(wise_date_bc_payment) > 0:
-                    if monzo_date_bc_payment[0] == pd.Timestamp("2025-12-31 00:00:00"):
-                        month_payment_period.append("December 2025" if val < monzo_date_bc_payment[0] else "January")
-                    elif "-12-" in str(monzo_date_bc_payment[0]):
-                        month_payment_period.append("December" if val < monzo_date_bc_payment[0] else "January")
+                    if wise_date_bc_payment[0] == pd.Timestamp("2025-12-31 00:00:00"):
+                        month_payment_period.append("December 2025" if val < wise_date_bc_payment[0] else "January")
+                    elif "-12-" in str(wise_date_bc_payment[0]):
+                        month_payment_period.append("December" if val < wise_date_bc_payment[0] else "January")
                     else:
-                        month_payment_period.append(str(calendar.month_name[int(month)]) if monzo_date_bc_payment[0] > val  else str(calendar.month_name[int(month) + 1]))
+                        month_payment_period.append(calendar.month_name[int(month)] if wise_date_bc_payment[0] > val  else calendar.month_name[int(month) + 1])
                 elif "Converted" not in description[key]:
                     month_payment_period.append(calendar.month_name[int(month)])
                     
