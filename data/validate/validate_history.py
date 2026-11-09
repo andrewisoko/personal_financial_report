@@ -1,6 +1,7 @@
 import pandas as pd
 from personal_financial_report.data.transform.date_dim import Date
 from personal_financial_report.data.transform.transaction_facts import Transaction
+from personal_financial_report.blc_balances import BCL_BALANCES
 from pathlib import Path
 import calendar
 
@@ -78,7 +79,7 @@ class ValidateHistory:
         df_dict = self.df_converter(tr_dataframe)
         
         
-        # 1. tot month periods with all banks included
+    # 1. tot month periods with all banks included
      
         EXPECTED_ROWS_COUNT= { 
             calendar.month_name[1]:64,
@@ -92,9 +93,48 @@ class ValidateHistory:
             calendar.month_name[9]:60
         }
         
+        exp_row_index = 0
         months_period = [month for month in df_dict["month_payment_period"]]
         count_rows_per_month = [months_period.count(calendar.month_name[month]) for month in range(1,13) if calendar.month_name[month] in months_period]
         
+        for key,val in EXPECTED_ROWS_COUNT.items():
+                if val == count_rows_per_month[exp_row_index]:
+                    exp_row_index += 1     
+            
+        assert list(EXPECTED_ROWS_COUNT.values()) == count_rows_per_month
+        
+        
+    # 2.  expected end balance for each month 
+        
+        
+        month_end_balances = []       
+        transactions_updates = [BCL_BALANCES["start_balance"]]
+        month_periods:list = df_dict["month_payment_period"] 
+        amounts:list = df_dict["amount"]
+        money_in:list = df_dict["money_in"]
+        category:list = df_dict["category_id"]
+        
+        data_transactions = {month:[] for month in list(dict.fromkeys(month_periods))}
+        
+        for index, month in enumerate(month_periods):
+            if "bcl" in category[index]:
+                data_transactions[month].append({money_in[index]:amounts[index]})
+        
+        data_transactions.pop("December 2025")  
+        print(data_transactions["January"])
+        
+        for month_name, data in data_transactions.items():
+            for obj in data:
+                    try:
+                        transactions_updates.append(transactions_updates[-1] + obj[True])
+                        
+                    except KeyError:
+                        transactions_updates.append(transactions_updates[-1] - obj[False])
+                
+                
+            month_end_balances.append((month_name,transactions_updates[-1]))
+        # print(*month_end_balances,sep="\n")
+            
         
 validation = ValidateHistory() 
 dates = Date()
