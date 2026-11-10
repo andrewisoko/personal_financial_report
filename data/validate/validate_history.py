@@ -1,7 +1,8 @@
 import pandas as pd
 from personal_financial_report.data.transform.date_dim import Date
 from personal_financial_report.data.transform.transaction_facts import Transaction
-from personal_financial_report.blc_balances import BCL_BALANCES
+from personal_financial_report.blc_balances import BCL_BALANCES_2026
+
 from pathlib import Path
 import calendar
 
@@ -106,9 +107,12 @@ class ValidateHistory:
         
     # 2.  expected end balance for each month 
         
+        expected_balances_per_month = [BCL_BALANCES_2026["end_balances"][calendar.month_name[month_num]] 
+                                      for month_num in range(1,13) 
+                                      if calendar.month_name[month_num] in BCL_BALANCES_2026["end_balances"]] 
         
         month_end_balances = []       
-        transactions_updates = [BCL_BALANCES["start_balance"]]
+        transactions_updates = [BCL_BALANCES_2026["start_balance"]]
         month_periods:list = df_dict["month_payment_period"] 
         amounts:list = df_dict["amount"]
         money_in:list = df_dict["money_in"]
@@ -121,7 +125,6 @@ class ValidateHistory:
                 data_transactions[month].append({money_in[index]:amounts[index]})
         
         data_transactions.pop("December 2025")  
-        print(data_transactions["January"])
         
         for month_name, data in data_transactions.items():
             for obj in data:
@@ -130,11 +133,12 @@ class ValidateHistory:
                         
                     except KeyError:
                         transactions_updates.append(transactions_updates[-1] - obj[False])
-                
-                
-            month_end_balances.append((month_name,transactions_updates[-1]))
-        # print(*month_end_balances,sep="\n")
-            
+            month_end_balances.append(float(f"{transactions_updates[-1]:.2f}"))
+               
+         
+        assert month_end_balances == expected_balances_per_month
+        
+        return True
         
 validation = ValidateHistory() 
 dates = Date()
