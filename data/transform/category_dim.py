@@ -34,4 +34,4 @@ class Category:
     
 category = Category()
     
-print(category.all_categories_table())
+# print(category.all_categories_table())

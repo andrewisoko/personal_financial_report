@@ -1,8 +1,7 @@
-import pandas as pd
 from personal_financial_report.data.transform.date_dim import Date
+from personal_financial_report.data.transform.category_dim import Category
 from personal_financial_report.data.transform.transaction_facts import Transaction
 from personal_financial_report.blc_balances import BCL_BALANCES_2026
-
 from pathlib import Path
 import calendar
 
@@ -77,7 +76,27 @@ class ValidateHistory:
      
     def transaction_facts_validate(self,tr_dataframe):
         
+        excel_dir = Path(__file__).parent.parent / "extract"/ "excel"
+        barclays_file_path = excel_dir / "barclays_excel" / "barclays_statements.xlsx"
+        monzo_file_path = excel_dir / "monzo_excel" / "monzo_statements.xlsx"
+        wise_file_path = excel_dir / "wise_excel" / "wise_statements.xlsx"
+        
+        all_categories = self.df_converter(Category().all_categories_table())
+        all_dates = self.df_converter(Date().history_dates(barclays_file_path,monzo_file_path,wise_file_path))
+        
         df_dict = self.df_converter(tr_dataframe)
+        
+        transaction_id :list[str] = df_dict["id"] 
+        bank :list[str] = df_dict["bank"] 
+        amounts:list[float] = df_dict["amount"]
+        currency :list[str] = df_dict["currency"] 
+        money_in:list[bool] = df_dict["money_in"]
+        money_out:list[bool] = df_dict["money_out"]
+        month_periods:list[str] = df_dict["month_payment_period"] 
+        category:list[str] = df_dict["category_id"]
+        date_id:list[str] = df_dict["date_id"]
+        
+    
         
         
     # 1. tot month periods with all banks included
@@ -98,8 +117,8 @@ class ValidateHistory:
         months_period = [month for month in df_dict["month_payment_period"]]
         count_rows_per_month = [months_period.count(calendar.month_name[month]) for month in range(1,13) if calendar.month_name[month] in months_period]
         
-        for key,val in EXPECTED_ROWS_COUNT.items():
-                if val == count_rows_per_month[exp_row_index]:
+        for key,id in EXPECTED_ROWS_COUNT.items():
+                if id == count_rows_per_month[exp_row_index]:
                     exp_row_index += 1     
             
         assert list(EXPECTED_ROWS_COUNT.values()) == count_rows_per_month
@@ -113,10 +132,7 @@ class ValidateHistory:
         
         month_end_balances = []       
         transactions_updates = [BCL_BALANCES_2026["start_balance"]]
-        month_periods:list = df_dict["month_payment_period"] 
-        amounts:list = df_dict["amount"]
-        money_in:list = df_dict["money_in"]
-        category:list = df_dict["category_id"]
+       
         
         data_transactions = {month:[] for month in list(dict.fromkeys(month_periods))}
         
@@ -138,6 +154,42 @@ class ValidateHistory:
          
         assert month_end_balances == expected_balances_per_month
         
+    # 3. money In money out validation
+       
+        for index,id in enumerate(transaction_id):
+            assert money_in[index] == True if money_out[index] == False else money_out[index] == True and money_in[index] == False
+            
+    # 4. data types of list items
+    
+            assert isinstance(id,str)
+            assert isinstance(bank[index],str)
+            assert isinstance(amounts[index],float)
+            assert isinstance(currency[index],str)
+            assert isinstance(money_in[index],bool)
+            assert isinstance(money_out[index],bool)
+            assert isinstance(month_periods[index],str)
+            assert isinstance(category[index],str)
+            assert isinstance(date_id[index],str)
+        
+    # 5. foreign keys
+    
+        assert category[index] in all_categories["id"]
+        assert date_id[index] in all_dates["id"]
+    
+    # 6. bank prefix
+    
+        assert id[0:3] in bank[index] if bank[index] != "barclays" else transaction_id[index][0:3] == "bcl"
+    
+    # 7. amounts
+    
+        assert amounts[index] > 0 
+        
+    # 8. money transfered to different bank accounts
+    
+        assert transaction_id.count("bcl_cat_monzotransferout19") == transaction_id.count("monzo_cat_transferin29")
+        assert transaction_id.count("bcl_cat_wisetransferout20") == transaction_id.count("wise_transferin34")
+
+
         return True
         
 validation = ValidateHistory() 

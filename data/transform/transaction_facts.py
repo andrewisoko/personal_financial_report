@@ -20,17 +20,17 @@ class Transaction:
         bank_ref = "barclays" if "barclays" in str(file_path) else "monzo" if "monzo" in str(file_path) else "wise"
         unidentified_transactions = {month: [] for month in list(calendar.month_name)[1:]}
         
-        banks = []   
-        transaction_id = []
-        amount = []
-        currency = []
-        money_out = []
-        money_in = []
-        month_payment_period = [] # month from the payment received in descending order.
+        banks:list[str] = []   
+        transaction_id:list[str] = []
+        amount:list[float]  = []
+        currency:list[str]  = []
+        money_out:list[bool]  = []
+        money_in:list[bool] = []
+        month_payment_period:list[str] = [] # month from the payment received in descending order.
         
 
-        date_id = []
-        category_id = []
+        date_id:list[str] = []
+        category_id:list[str] = []
     
     #-----------------------------------------------------------------------------------------#  
     #---------------------------------BARCLAYS------------------------------------------------# 
@@ -192,7 +192,7 @@ class Transaction:
             ### dates id ### 
             
             for key,val in dates.items():
-                date_fk = str(val)[0:3] + str(val)[5:7] + str(val)[8:10] 
+                date_fk = str(val)[0:4] + str(val)[5:7] + str(val)[8:10]
                 date_id.append(date_fk)
                 
             ### rest of data ###
@@ -273,7 +273,7 @@ class Transaction:
             ### dates id ###  
                     
             for key,val in dates.items():
-                date_fk = str(val)[0:3] + str(val)[5:7] + str(val)[8:10]
+                date_fk = str(val)[0:4] + str(val)[5:7] + str(val)[8:10]
                 if "Converted" not in description[key]:
                     date_id.append(date_fk)
             
