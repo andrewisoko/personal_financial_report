@@ -155,11 +155,3 @@ class Date:
         return pd.concat(all_frames)
        
                 
-date = Date()
-excel_dir = Path(__file__).parent.parent / "extract"/ "excel"
-
-barclays_file_path = excel_dir / "barclays_excel" / "barclays_statements.xlsx"
-monzo_file_path = excel_dir / "monzo_excel" / "monzo_statements.xlsx"
-wise_file_path = excel_dir / "wise_excel" / "wise_statements.xlsx"
-
-# print(date.history_dates(barclays_file_path,monzo_file_path,wise_file_path))

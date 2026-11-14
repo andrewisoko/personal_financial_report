@@ -4,7 +4,7 @@ import pandas as pd
 
 class Category:
     
-    def all_categories_table(self):
+    def category_df(self):
          
         
         data = {
