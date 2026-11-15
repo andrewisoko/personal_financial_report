@@ -1,7 +1,7 @@
-from personal_financial_report.data.transform.date_dim import Date
-from personal_financial_report.data.transform.category_dim import Category
-from personal_financial_report.data.transform.transaction_facts import Transaction
-from personal_financial_report.blc_balances import BCL_BALANCES_2026
+from data.transform.date_dim import Date
+from data.transform.category_dim import Category
+from data.transform.transaction_facts import Transaction
+from blc_balances import BCL_BALANCES_2026
 from pathlib import Path
 import calendar
 
@@ -81,7 +81,7 @@ class ValidateHistory:
         monzo_file_path = excel_dir / "monzo_excel" / "monzo_statements.xlsx"
         wise_file_path = excel_dir / "wise_excel" / "wise_statements.xlsx"
         
-        all_categories = self.df_converter(Category().all_categories_table())
+        all_categories = self.df_converter(Category().category_df())
         all_dates = self.df_converter(Date().history_dates(barclays_file_path,monzo_file_path,wise_file_path))
         
         df_dict = self.df_converter(tr_dataframe)

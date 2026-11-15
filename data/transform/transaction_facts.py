@@ -4,8 +4,7 @@ from pathlib import Path
 import math
 import calendar
 from collections import defaultdict
-import numpy as np
-from personal_financial_report.non_confidential_keywords import KEYWORD_TO_CATEGORY
+from non_confidential_keywords import KEYWORD_TO_CATEGORY
 
 
 

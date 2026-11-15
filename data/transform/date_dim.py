@@ -152,6 +152,7 @@ class Date:
         
         all_frames = [bcl_xlsx_df,monzo_xlsx_df,wise_xlsx_df]
         
+        
         return pd.concat(all_frames)
        
                 

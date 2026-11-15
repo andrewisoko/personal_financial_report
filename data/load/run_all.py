@@ -1,12 +1,12 @@
 import pandas as pd
 from pathlib import Path
-from sqlalchemy import create_engine,inspect
-from  transform.date_dim import Date
-from transform.category_dim import Category
-from transform.transaction_facts import Transaction
-from validate.validate_history import ValidateHistory
-from dotenv import load_dotenv
 import os
+from data.transform.date_dim import Date
+from data.transform.category_dim import Category
+from data.transform.transaction_facts import Transaction
+from data.validate.validate_history import ValidateHistory
+from sqlalchemy import create_engine,inspect,select
+from dotenv import load_dotenv
 
 
 def history_df_to_sql():
@@ -40,22 +40,28 @@ def history_df_to_sql():
     history_dates = date.history_dates(barclays_file_path,monzo_file_path,wise_file_path)
     history_transactions = transaction.history_transactions(barclays_file_path,monzo_file_path,wise_file_path)
     
-    category.category_df().to_sql(
-        name='category_dim',
-        con=engine,
-        if_exists='replace',
-        index=False
-    )
+    
+    if not inspector.has_table("category_dim","public"):
+        category.category_df().to_sql(
+            name='category_dim',
+            con=engine,
+            if_exists='replace',
+            index=False
+        )
     
     
     if validate_data.date_dim_validate(history_dates) == True and inspector.has_table("date_dim","public"):
-        history_dates.to_sql(
-        name='date_dim',
-        con=engine,
-        if_exists='append',
-        index=False
-    )
-    else:
+        
+        first_id = pd.read_sql("SELECT id FROM public.date_dim LIMIT 1", con=engine).iloc[0, 0]
+        if not history_dates.iloc[0, 0] == first_id:
+
+            history_dates.to_sql(
+            name='date_dim',
+            con=engine,
+            if_exists='append',
+            index=False
+        )
+    elif validate_data.date_dim_validate(history_dates) == True :
         history_dates.to_sql(
             name='date_dim',
             con=engine,
@@ -63,20 +69,25 @@ def history_df_to_sql():
         )
         
     if validate_data.transaction_facts_validate(history_transactions) == True and inspector.has_table("transaction_facts","public"):
-        history_transactions.to_sql(
-        name='transaction_facts',
-        con=engine,
-        if_exists='append',
-        index=False
-    )
-    else:
+        
+        first_date_id = pd.read_sql("SELECT date_id FROM public.transaction_facts LIMIT 1", con=engine).iloc[0,0]  
+        
+        if not history_transactions.iloc[0, 8] == first_date_id:
+            history_transactions.to_sql(
+            name='transaction_facts',
+            con=engine,
+            if_exists='append',
+            index=False
+        )
+    elif validate_data.transaction_facts_validate(history_transactions) == True:
         history_transactions.to_sql(
             name='transaction_facts',
             con=engine,
             index=False
         )
-        
-    return "all dataframes moved into Postgres 🚀"
+    
+    print("all dataframes moved into Postgres 🚀")
+   
     
 
 if __name__ == "__main__":
