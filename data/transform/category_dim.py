@@ -17,7 +17,7 @@ class Category:
                    "monzo_cat_gym21","monzo_cat_food22","monzo_cat_extrafood23","monzo_cat_nightsout24","monzo_cat_homenecessities25","monzo_cat_transport26",
                    "monzo_cat_health27","monzo_cat_extras28","monzo_cat_transferin29"
                    
-                   "wise_cat_holidays30","wise_cat_food31","wise_cat_nightsout32","wise_cat_extras33","wise_transferin34"
+                   "wise_cat_holidays30","wise_cat_food31","wise_cat_nightsout32","wise_cat_extras33","wise_cat_transferin34"
                    
                    ],
             "name": [ "income","rent","water","electricity","gym","tax","food","extra food","nights out","home necessities",

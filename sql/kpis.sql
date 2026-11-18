@@ -118,4 +118,31 @@ SELECT
     ) AS tot_saved_percentage
 FROM monthly_balances
 ORDER BY tot_saved DESC
+
+
+-- 8. MONTHLY AMOUNT SPENT PER CATEGORY
     
+SELECT
+month_payment_period,
+category_id,
+SUM(amount)::numeric AS tot_amount
+FROM transaction_facts
+WHERE money_in = False
+GROUP BY month_payment_period,category_id
+ORDER BY month_payment_period
+
+-- 9. AVERAGE I SPENT ON FOOD,BILLS AND RENT PER MONTH
+
+SELECT
+	month_payment_period,
+	SUM(amount) FILTER(
+		WHERE money_in = False
+		AND category_id LIKE ANY(ARRAY['%electricity%','%rent%','%tax%',
+		'%food%','%water%'
+		]))::numeric AS tot_spent
+	FROM transaction_facts
+	GROUP BY month_payment_period
+	ORDER BY tot_spent
+
+
+
