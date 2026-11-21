@@ -4,6 +4,7 @@ from data.transform.transaction_facts import Transaction
 from blc_balances import BCL_BALANCES_2026
 from pathlib import Path
 import calendar
+from datetime import datetime
 
 class ValidateHistory:
     
@@ -58,7 +59,7 @@ class ValidateHistory:
         
         matches = 0
         ids_formatted = [id_date[0:4] + "-" + id_date[4:6] + "-" + id_date[6:8]  for id_date in df_dict["id"]]
-        dates_notime = [date[0:10] for date in df_dict["date"]]
+        dates_notime = [str(date)[0:10] for date in df_dict["date"]]
         
         for id_in_date in ids_formatted:
             if id_in_date == dates_notime[matches]:
@@ -69,8 +70,15 @@ class ValidateHistory:
         
         
         # 4. types check
+        
      
-        assert all( isinstance( item, str) for item in all_values)
+        assert all( isinstance( item, str) for item in df_dict["id"])
+        assert all( isinstance( item, datetime) for item in df_dict["date"])
+        assert all( isinstance( item, str) for item in df_dict["year"])
+        assert all( isinstance( item, str) for item in df_dict["month"])
+        assert all( isinstance( item, str) for item in df_dict["day"])
+        assert all( isinstance( item, str) for item in df_dict["quarter"])
+        assert all( isinstance( item, str) for item in df_dict["day_of_week"])
         
         return True
      

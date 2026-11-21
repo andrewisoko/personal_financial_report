@@ -15,7 +15,7 @@ class Date:
         date_dict = pd.read_excel(file_path,sheet_name,usecols=["Date"]).to_dict()
         
         id = [ str(val)[0:4] + str(val)[5:7] + str(val)[8:10] for key,val in date_dict["Date"].items()]
-        dates = [ str(val) for key,val in date_dict["Date"].items()]
+        dates = [ val for key,val in date_dict["Date"].items()]
         year = [ str(val)[0:4] for key,val in date_dict["Date"].items()]
         month = [ str(val)[5:7] for key,val in date_dict["Date"].items()]
         day = [ str(val)[8:10] for key,val in date_dict["Date"].items()]
@@ -36,7 +36,6 @@ class Date:
             "quarter":quarter,
             "day_of_week":weekday
         }
-        
         return data
     
     def history_dates(self,bcl_file_path,monzo_file_path,wise_file_path):
