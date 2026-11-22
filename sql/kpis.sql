@@ -55,7 +55,7 @@ WITH balances AS(
 
 FROM transaction_facts
 )
-SELECT (tot_income + invested) - (tot_expenses - invested) AS money_saved FROM balances
+SELECT (tot_income + invested) - (tot_expenses - invested) AS tot_saved FROM balances
  
 -- 5.  TOT MONEY EARNED FOR EACH MONTH
 
