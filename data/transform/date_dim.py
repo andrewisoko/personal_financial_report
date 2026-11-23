@@ -71,7 +71,7 @@ class Date:
             for key,value in monzo_sheet_month.items():
                 monzo_grouped[key].extend(value)
 
-        # monzo2_xlsx_df = pd.DataFrame(dict(monzo_grouped))
+  
         monzo_xlsx_df = pd.DataFrame(dict(monzo_grouped))
     
           
@@ -93,6 +93,8 @@ class Date:
         all_frames = [bcl_xlsx_df,monzo_xlsx_df,wise_xlsx_df]
         
         return pd.concat(all_frames).drop_duplicates()
+    
+    
         
     def current_month_dates(self,blc_file_path,monzo_file_path,wise_file_path):
         
@@ -123,12 +125,3 @@ class Date:
         return pd.concat(all_frames).drop_duplicates()
     
   
-                
-date = Date()
-excel_dir = Path(__file__).parent.parent / "extract"/ "excel"
-
-barclays_file_path = excel_dir / "barclays_excel" / "barclays_statements.xlsx"
-monzo_file_path = excel_dir / "monzo_excel" / "monzo_statements.xlsx"
-wise_file_path = excel_dir / "wise_excel" / "wise_statements.xlsx"
-
-print(date.history_dates(barclays_file_path,monzo_file_path,wise_file_path))
