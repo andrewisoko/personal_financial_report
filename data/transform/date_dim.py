@@ -92,7 +92,7 @@ class Date:
        
         all_frames = [bcl_xlsx_df,monzo_xlsx_df,wise_xlsx_df]
         
-        return pd.concat(all_frames)
+        return pd.concat(all_frames).drop_duplicates()
         
     def current_month_dates(self,blc_file_path,monzo_file_path,wise_file_path):
         
@@ -120,8 +120,9 @@ class Date:
         all_frames = [bcl_xlsx_df,monzo_xlsx_df,wise_xlsx_df]
         
         
-        return pd.concat(all_frames)
-       
+        return pd.concat(all_frames).drop_duplicates()
+    
+  
                 
 date = Date()
 excel_dir = Path(__file__).parent.parent / "extract"/ "excel"
