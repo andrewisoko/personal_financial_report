@@ -24,7 +24,7 @@ class Date:
         datetimes = pd.to_datetime(date_series)
     
         quarter = [str(qrt) for qrt in datetimes.dt.quarter.to_list()]
-        weekday = [str(wkd) for wkd in datetimes.dt.weekday.to_list()]
+        weekday = [str(wkd) for wkd in datetimes.dt.day_of_week.to_list()]
            
         
         data = {
@@ -44,56 +44,26 @@ class Date:
         #---------------------------------BARCLAYS------------------------------------------------# 
         #-----------------------------------------------------------------------------------------#
          
-        bcl2_xlsx_container = []
-        
-        from_num = 1
-        to_num = 2
-        
-        month_format = lambda num: f"0{num}" if num <= 9 else str(num)
-        last_page_count = len(pd.ExcelFile(bcl_file_path).sheet_names) - 1
-        bcl1_xlsx_df = pd.DataFrame(self.date_dim(bcl_file_path,"2025-12 to 2026-01")) # bcl 2025 sheet
+        bcl_sheet_names = [bcl_sheet_month for bcl_sheet_month in pd.ExcelFile(bcl_file_path).sheet_names if bcl_sheet_month != "All Transactions"]
+        bcl2_xlsx_container = [self.date_dim(bcl_file_path,bcl_sheet_month) for bcl_sheet_month in bcl_sheet_names]
 
-        while to_num <= last_page_count:
-            
-            bcl_sheet_month = self.date_dim(bcl_file_path,f"2026-{month_format(from_num)} to 2026-{month_format(to_num)}")
-            bcl2_xlsx_container.append(bcl_sheet_month)
-            
-            from_num += 1
-            to_num += 1
-            
+      
         bcl_grouped = defaultdict(list)
         
         for bcl_sheet_month in bcl2_xlsx_container:
             for key, value in bcl_sheet_month.items():
                 bcl_grouped[key].extend(value)
 
-        bcl2_xlsx_df = pd.DataFrame(dict(bcl_grouped))
+        bcl_xlsx_df = pd.DataFrame(dict(bcl_grouped))
        
         
         #----------------------------------------------------------------------------------------#               
         #-----------------------------------MONZO------------------------------------------------#  
-        #----------------------------------------------------------------------------------------#  
+        #----------------------------------------------------------------------------------------# 
         
-        monzo_xlsx_container = []
-        months_dict = {0:"Jan",1:"Feb",2:"Mar",3:"Apr",4:"May",5:"Jun",6:"Jul",7:"Aug",8:"Sep",9:"Oct",10:"Nov",11:"Dec"}
-        monzo1_xlsx_df = pd.DataFrame(self.date_dim(monzo_file_path, "Dec 2025 (28-31)")) #2025 sheet
+        monzo_sheet_names = [monzo_sheet_month for monzo_sheet_month in pd.ExcelFile(monzo_file_path).sheet_names]
+        monzo_xlsx_container = [self.date_dim(monzo_file_path,monzo_sheet_month) for monzo_sheet_month in monzo_sheet_names] 
         
-        
-        for month_index in range(0,last_page_count):
-            if month_index == 1:
-                monzo_xlsx_container.append(self.date_dim(monzo_file_path,"Feb 2026 (01-28)"))
-            elif month_index == 3:
-                monzo_xlsx_container.append(self.date_dim(monzo_file_path,"Apr 2026 (01-30)"))
-            elif month_index == 5:
-                monzo_xlsx_container.append(self.date_dim(monzo_file_path,"Jun 2026 (01-30)"))
-            elif month_index == 8:
-                monzo_xlsx_container.append(self.date_dim(monzo_file_path,"Sep 2026 (01-30)"))
-            elif month_index == 10:
-                monzo_xlsx_container.append(self.date_dim(monzo_file_path,"Nov 2026 (01-30)"))
-            else:
-                monzo_xlsx_container.append(self.date_dim(monzo_file_path,f"{months_dict[month_index]} 2026 (01-31)"))
-                
-            month_index += 1
             
         monzo_grouped = defaultdict(list)
         
@@ -101,19 +71,17 @@ class Date:
             for key,value in monzo_sheet_month.items():
                 monzo_grouped[key].extend(value)
 
-        monzo2_xlsx_df = pd.DataFrame(dict(monzo_grouped))
+        # monzo2_xlsx_df = pd.DataFrame(dict(monzo_grouped))
+        monzo_xlsx_df = pd.DataFrame(dict(monzo_grouped))
     
           
         #-------------------------------------------------------------------------------------#
         #---------------------------------WISE------------------------------------------------#
         #-------------------------------------------------------------------------------------#    
        
-        wise_may_2026 = self.date_dim(wise_file_path, "2026-05 May")
-        wise_jul_2026 = self.date_dim(wise_file_path, "2026-07 Jul")
-        wise_aug_2026 = self.date_dim(wise_file_path, "2026-08 Aug")
-        wise_sep_2026 = self.date_dim(wise_file_path, "2026-09 Sep")
+        wise_sheet_names = [wise_sheet_month for wise_sheet_month in pd.ExcelFile(wise_file_path).sheet_names]
+        wise_xlsx_container = [self.date_dim(wise_file_path,wise_sheet_month) for wise_sheet_month in wise_sheet_names] 
         
-        wise_xlsx_container = [wise_may_2026,wise_jul_2026,wise_aug_2026,wise_sep_2026]
         wise_grouped = defaultdict(list)
         
         for wise_sheet_month in wise_xlsx_container:
@@ -122,7 +90,7 @@ class Date:
         
         wise_xlsx_df = pd.DataFrame(dict(wise_grouped))
        
-        all_frames = [bcl1_xlsx_df,bcl2_xlsx_df,monzo1_xlsx_df,monzo2_xlsx_df,wise_xlsx_df]
+        all_frames = [bcl_xlsx_df,monzo_xlsx_df,wise_xlsx_df]
         
         return pd.concat(all_frames)
         
@@ -155,3 +123,11 @@ class Date:
         return pd.concat(all_frames)
        
                 
+date = Date()
+excel_dir = Path(__file__).parent.parent / "extract"/ "excel"
+
+barclays_file_path = excel_dir / "barclays_excel" / "barclays_statements.xlsx"
+monzo_file_path = excel_dir / "monzo_excel" / "monzo_statements.xlsx"
+wise_file_path = excel_dir / "wise_excel" / "wise_statements.xlsx"
+
+print(date.history_dates(barclays_file_path,monzo_file_path,wise_file_path))
