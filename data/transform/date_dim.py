@@ -51,8 +51,8 @@ class Date:
         bcl_grouped = defaultdict(list)
         
         for bcl_sheet_month in bcl_xlsx_container:
-            for key, value in bcl_sheet_month.items():
-                bcl_grouped[key].extend(value)
+            for col, row_list in bcl_sheet_month.items():
+                bcl_grouped[col].extend(row_list)
 
         bcl_xlsx_df = pd.DataFrame(dict(bcl_grouped))
        
@@ -69,8 +69,8 @@ class Date:
         monzo_grouped = defaultdict(list)
         
         for monzo_sheet_month in monzo_xlsx_container:
-            for key,value in monzo_sheet_month.items():
-                monzo_grouped[key].extend(value)
+            for col,row_list in monzo_sheet_month.items():
+                monzo_grouped[col].extend(row_list)
 
   
         monzo_xlsx_df = pd.DataFrame(dict(monzo_grouped))
@@ -86,8 +86,8 @@ class Date:
         wise_grouped = defaultdict(list)
         
         for wise_sheet_month in wise_xlsx_container:
-            for key,value in wise_sheet_month.items():
-                wise_grouped[key].extend(value)
+            for col,row_list in wise_sheet_month.items():
+                wise_grouped[col].extend(row_list)
         
         wise_xlsx_df = pd.DataFrame(dict(wise_grouped))
        

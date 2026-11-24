@@ -70,8 +70,8 @@ def history_df_to_sql():
         
     if validate_data.transaction_facts_validate(history_transactions) == True and inspector.has_table("transaction_facts","public"):
         
-        first_date_id = pd.read_sql("SELECT * FROM public.transaction_facts ORDER BY date_id LIMIT 1;", con=engine).iloc[0,8] 
-        if not history_transactions.iloc[0, 8] == first_date_id:
+        first_date_id = pd.read_sql("SELECT * FROM public.transaction_facts ORDER BY date_id LIMIT 1;", con=engine).iloc[0,9] 
+        if not history_transactions.iloc[0, 9] == first_date_id:
             history_transactions.to_sql(
             name='transaction_facts',
             con=engine,
