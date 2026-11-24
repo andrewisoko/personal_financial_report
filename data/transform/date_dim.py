@@ -45,12 +45,12 @@ class Date:
         #-----------------------------------------------------------------------------------------#
          
         bcl_sheet_names = [bcl_sheet_month for bcl_sheet_month in pd.ExcelFile(bcl_file_path).sheet_names if bcl_sheet_month != "All Transactions"]
-        bcl2_xlsx_container = [self.date_dim(bcl_file_path,bcl_sheet_month) for bcl_sheet_month in bcl_sheet_names]
+        bcl_xlsx_container = [self.date_dim(bcl_file_path,bcl_sheet_month) for bcl_sheet_month in bcl_sheet_names]
 
       
         bcl_grouped = defaultdict(list)
         
-        for bcl_sheet_month in bcl2_xlsx_container:
+        for bcl_sheet_month in bcl_xlsx_container:
             for key, value in bcl_sheet_month.items():
                 bcl_grouped[key].extend(value)
 
@@ -60,6 +60,7 @@ class Date:
         #----------------------------------------------------------------------------------------#               
         #-----------------------------------MONZO------------------------------------------------#  
         #----------------------------------------------------------------------------------------# 
+        
         
         monzo_sheet_names = [monzo_sheet_month for monzo_sheet_month in pd.ExcelFile(monzo_file_path).sheet_names]
         monzo_xlsx_container = [self.date_dim(monzo_file_path,monzo_sheet_month) for monzo_sheet_month in monzo_sheet_names] 

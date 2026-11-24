@@ -34,7 +34,7 @@ class Transaction:
     #-----------------------------------------------------------------------------------------#  
     #---------------------------------BARCLAYS------------------------------------------------# 
     #-----------------------------------------------------------------------------------------#
-    
+
         if bank_ref == "barclays":
             
             count = 0 
@@ -182,9 +182,6 @@ class Transaction:
                         month_payment_period.append("December" if val < monzo_date_bc_payment[0] else "January")
                     else:
                         month_payment_period.append(calendar.month_name[int(month)] if monzo_date_bc_payment[0] > val  else calendar.month_name[int(month) + 1])
-            else:
-                for key,val in dates.items():
-                    month_payment_period.append((calendar.month_name[int(month)]))
                 
             
     
@@ -309,52 +306,49 @@ class Transaction:
             "date_id": date_id
             
         }
-        
+                
         return data
       
       
     def history_transactions(self,bcl_file_path,monzo_file_path,wise_file_path):
-        
-        #-----------------------------------------------------------------------------------------#  
+    
+       
         #---------------------------------BARCLAYS------------------------------------------------# 
-        #-----------------------------------------------------------------------------------------#
+       
         
         bcl_sheet_names = [bcl_sheet_month for bcl_sheet_month in pd.ExcelFile(bcl_file_path).sheet_names if bcl_sheet_month != "All Transactions"]
-        bcl2_xlsx_container = [self.transaction_facts(bcl_file_path,bcl_sheet_month) for bcl_sheet_month in bcl_sheet_names]
+        bcl_xlsx_container = [self.transaction_facts(bcl_file_path,bcl_sheet_month) for bcl_sheet_month in bcl_sheet_names]
         
               
         bcl_grouped = defaultdict(list)
         
-        for bcl_sheet_month in bcl2_xlsx_container:
+        for bcl_sheet_month in bcl_xlsx_container:
             for key, value in bcl_sheet_month.items():
                 bcl_grouped[key].extend(value)
 
         bcl_xlsx_df = pd.DataFrame(dict(bcl_grouped))
         
-        #----------------------------------------------------------------------------------------#               
+        bcl_payment_months = [calendar.month_name[int(str(date)[5:7])][0:3] for date in self.payment_dates]
+    
+                 
         #-----------------------------------MONZO------------------------------------------------#  
-        #----------------------------------------------------------------------------------------#  
-                
-        monzo_sheet_names = [monzo_sheet_month for monzo_sheet_month in pd.ExcelFile(monzo_file_path).sheet_names]
+    
+          
+        monzo_sheet_names = [monzo_sheet_month for monzo_sheet_month in pd.ExcelFile(monzo_file_path).sheet_names if monzo_sheet_month[0:3] in bcl_payment_months]
         monzo_xlsx_container = [self.transaction_facts(monzo_file_path,monzo_sheet_month) for monzo_sheet_month in monzo_sheet_names] 
-                
-                    
+
         monzo_grouped = defaultdict(list)
         
         for monzo_sheet_month in monzo_xlsx_container:
             for key,value in monzo_sheet_month.items():
                 monzo_grouped[key].extend(value)
 
-    
         monzo_xlsx_df = pd.DataFrame(dict(monzo_grouped))
         
-        #-------------------------------------------------------------------------------------#
         #---------------------------------WISE------------------------------------------------#
-        #-------------------------------------------------------------------------------------#  
     
-
         wise_sheet_names = [wise_sheet_month for wise_sheet_month in pd.ExcelFile(wise_file_path).sheet_names]
-        wise_xlsx_container = [self.transaction_facts(wise_file_path,wise_sheet_month) for wise_sheet_month in wise_sheet_names] 
+        wise_xlsx_container = [self.transaction_facts(wise_file_path,wise_sheet_month) for wise_sheet_month in wise_sheet_names if wise_sheet_month[0:3] in bcl_payment_months] 
         
         wise_grouped = defaultdict(list)
         
@@ -363,7 +357,8 @@ class Transaction:
                 wise_grouped[key].extend(value)
         
         wise_xlsx_df = pd.DataFrame(dict(wise_grouped))
-        
+         
+                
         all_frames = [bcl_xlsx_df,monzo_xlsx_df,wise_xlsx_df]
         
         return pd.concat(all_frames).drop_duplicates()
@@ -398,12 +393,3 @@ class Transaction:
         return pd.concat(all_frames).drop_duplicates()
     
     
-transaction = Transaction()
-excel_dir = Path(__file__).parent.parent / "extract"/ "excel"
-
-barclays_file_path = excel_dir / "barclays_excel" / "barclays_statements.xlsx"
-monzo_file_path = excel_dir / "monzo_excel" / "monzo_statements.xlsx"
-wise_file_path = excel_dir / "wise_excel" / "wise_statements.xlsx"
-
-
-print(transaction.history_transactions(barclays_file_path,monzo_file_path,wise_file_path))

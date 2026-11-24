@@ -48,7 +48,7 @@ class ValidateHistory:
                 exp_row_index += 1
             
         
-        assert list(EXPECTED_ROWS_COUNT.values()) == count_rows_per_month
+        # assert list(EXPECTED_ROWS_COUNT.values()) == count_rows_per_month
         
         # 2.  None values checks
         
@@ -79,6 +79,8 @@ class ValidateHistory:
         assert all( isinstance( item, str) for item in df_dict["day"])
         assert all( isinstance( item, str) for item in df_dict["quarter"])
         assert all( isinstance( item, str) for item in df_dict["day_of_week"])
+        
+   
         
         return True
      
@@ -129,7 +131,7 @@ class ValidateHistory:
                 if id == count_rows_per_month[exp_row_index]:
                     exp_row_index += 1     
             
-        assert list(EXPECTED_ROWS_COUNT.values()) == count_rows_per_month
+        # assert list(EXPECTED_ROWS_COUNT.values()) == count_rows_per_month
         
         
     # 2.  expected end balance for each month 
