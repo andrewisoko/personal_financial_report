@@ -4,12 +4,12 @@ import os
 from data.transform.date_dim import Date
 from data.transform.category_dim import Category
 from data.transform.transaction_facts import Transaction
-from data.validate.validate_history import ValidateHistory
+from data.validate.validate_current_month import Validate_Current_Month
 from sqlalchemy import create_engine,inspect
 from dotenv import load_dotenv
 
 
-def history_df_to_sql():
+def cm_df_to_sql():
     
     load_dotenv()
     
@@ -32,62 +32,42 @@ def history_df_to_sql():
     monzo_file_path = excel_dir / "monzo_excel" / "monzo_statements.xlsx"
     wise_file_path = excel_dir / "wise_excel" / "wise_statements.xlsx"
     
-    validate_data = ValidateHistory()
-    category = Category()
+    validate_data = Validate_Current_Month()
     date = Date()
     transaction = Transaction()
     
-    history_dates = date.history_dates(barclays_file_path,monzo_file_path,wise_file_path)
-    history_transactions = transaction.history_transactions(barclays_file_path,monzo_file_path,wise_file_path)
+    current_month_dates = date.current_month_dates(barclays_file_path,monzo_file_path,wise_file_path)
+    current_month_transactions = transaction.current_month_transactions(barclays_file_path,monzo_file_path,wise_file_path)
     
-    
-    if not inspector.has_table("category_dim","public"):
-        category.category_df().to_sql(
-            name='category_dim',
-            con=engine,
-            if_exists='replace',
-            index=False
-        )
-    
-    
-    if validate_data.date_dim_validate(history_dates) == True and inspector.has_table("date_dim","public"):
-        
-        first_id = pd.read_sql("SELECT id FROM public.date_dim LIMIT 1", con=engine).iloc[0, 0]
-        if not history_dates.iloc[0, 0] == first_id:
-
-            history_dates.to_sql(
-            name='date_dim',
-            con=engine,
-            if_exists='append',
-            index=False
-        )
-    elif validate_data.date_dim_validate(history_dates) == True :
-        history_dates.to_sql(
-            name='date_dim',
-            con=engine,
-            index=False
-        )
-        
-    if validate_data.transaction_facts_validate(history_transactions) == True and inspector.has_table("transaction_facts","public"):
-        
-        first_date_id = pd.read_sql("SELECT * FROM public.transaction_facts ORDER BY date_id LIMIT 1;", con=engine).iloc[0,9] 
-        if not history_transactions.iloc[0, 9] == first_date_id:
-            history_transactions.to_sql(
-            name='transaction_facts',
-            con=engine,
-            if_exists='append',
-            index=False
-        )
-    elif validate_data.transaction_facts_validate(history_transactions) == True:
-        history_transactions.to_sql(
-            name='transaction_facts',
-            con=engine,
-            index=False
-        )
-    
-    print("all dataframes moved into Postgres 🚀")
    
     
+    if validate_data.date_dim_validate(current_month_dates) == True and inspector.has_table("date_dim","public"):
+        
+        first_id = pd.read_sql("SELECT id FROM public.date_dim LIMIT 1", con=engine).iloc[0, 0]
+        if not current_month_dates.iloc[0, 0] == first_id:
+
+            current_month_dates.to_sql(
+            name='date_dim',
+            con=engine,
+            if_exists='append',
+            index=False
+        )
+   
+        
+    if validate_data.transaction_facts_validate(current_month_transactions) == True and inspector.has_table("transaction_facts","public"):
+        
+        first_date_id = pd.read_sql("SELECT * FROM public.transaction_facts ORDER BY date_id LIMIT 1;", con=engine).iloc[0,9] 
+        if not current_month_transactions.iloc[0, 9] == first_date_id:
+            current_month_transactions.to_sql(
+            name='transaction_facts',
+            con=engine,
+            if_exists='append',
+            index=False
+        )
+   
+    
+    print("all dataframes [CURRENT MONTH] moved into Postgres 🚀")
+   
 
 if __name__ == "__main__":
-    history_df_to_sql()
+    cm_df_to_sql()
