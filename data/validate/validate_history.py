@@ -1,6 +1,5 @@
 from data.transform.date_dim import Date
 from data.transform.category_dim import Category
-from data.transform.transaction_facts import Transaction
 from blc_balances import BCL_BALANCES_2026
 from pathlib import Path
 import calendar
@@ -99,6 +98,7 @@ class ValidateHistory:
         transaction_id :list[str] = df_dict["id"] 
         bank :list[str] = df_dict["bank"] 
         amounts:list[float] = df_dict["amount"]
+        converted_to_gbp:list[bool] = df_dict["converted_to_gbp"]
         currency :list[str] = df_dict["currency"] 
         money_in:list[bool] = df_dict["money_in"]
         money_out:list[bool] = df_dict["money_out"]
@@ -109,7 +109,7 @@ class ValidateHistory:
     
         
         
-    # 1. tot month periods with all banks included
+    # 1. tot row count per month periods with all banks included
      
         EXPECTED_ROWS_COUNT= { 
             calendar.month_name[1]:64,
@@ -174,6 +174,7 @@ class ValidateHistory:
             assert isinstance(id,str)
             assert isinstance(bank[index],str)
             assert isinstance(amounts[index],float)
+            assert isinstance(converted_to_gbp[index],bool)
             assert isinstance(currency[index],str)
             assert isinstance(money_in[index],bool)
             assert isinstance(money_out[index],bool)
@@ -194,7 +195,11 @@ class ValidateHistory:
     
         assert amounts[index] > 0 
         
-    # 8. money transfered to different bank accounts
+    # 8. conversions
+       
+        assert converted_to_gbp[index] == True if currency[index] != "GBP" else converted_to_gbp[index] == False
+        
+    # 9. money transfered to different bank accounts
     
         assert transaction_id.count("bcl_cat_monzotransferout19") == transaction_id.count("monzo_cat_transferin29")
         assert transaction_id.count("bcl_cat_wisetransferout20") == transaction_id.count("wise_transferin34")
@@ -202,3 +207,4 @@ class ValidateHistory:
 
         return True
         
+    
